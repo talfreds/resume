@@ -1,0 +1,255 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f4f7fb;
+  --panel: rgba(255, 255, 255, 0.88);
+  --panel-strong: #ffffff;
+  --text: #172033;
+  --muted: #51607a;
+  --border: rgba(23, 32, 51, 0.12);
+  --accent: #2358d2;
+  --accent-soft: rgba(35, 88, 210, 0.12);
+  --shadow: 0 24px 80px rgba(15, 23, 42, 0.12);
+}
+
+body[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #09111f;
+  --panel: rgba(10, 20, 36, 0.92);
+  --panel-strong: #111d31;
+  --text: #edf3ff;
+  --muted: #9fb2d4;
+  --border: rgba(159, 178, 212, 0.16);
+  --accent: #7db4ff;
+  --accent-soft: rgba(125, 180, 255, 0.14);
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(35, 88, 210, 0.15), transparent 34%),
+    var(--bg);
+  color: var(--text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+a {
+  color: var(--accent);
+}
+
+button {
+  font: inherit;
+}
+
+.page {
+  width: min(1120px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.hero,
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+}
+
+.hero {
+  padding: 2rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.hero-top,
+.section-header,
+.job-header,
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.theme-toggle {
+  border: 1px solid var(--border);
+  background: var(--panel-strong);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+}
+
+.summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  max-width: 65ch;
+}
+
+.quick-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.pill {
+  padding: 0.6rem 0.85rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid transparent;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.column {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.card {
+  padding: 1.5rem;
+}
+
+.card h2,
+.hero h1 {
+  margin: 0;
+}
+
+.role {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.role + .role,
+.project + .project {
+  border-top: 1px solid var(--border);
+}
+
+.eyebrow,
+.meta {
+  color: var(--muted);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+
+.section-list,
+.skills-groups,
+.project-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.skills-group {
+  padding: 1rem;
+  border-radius: 18px;
+  background: var(--panel-strong);
+  border: 1px solid var(--border);
+}
+
+.skills-group h3,
+.project h3,
+.role h3 {
+  margin: 0 0 0.5rem;
+}
+
+.skills-group p,
+.project p,
+.source-note,
+.visualizer-copy {
+  margin: 0;
+  color: var(--muted);
+}
+
+ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+li + li {
+  margin-top: 0.45rem;
+}
+
+.visualizer {
+  display: grid;
+  gap: 1rem;
+}
+
+.visualizer-stage {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  min-height: 280px;
+  border-radius: 20px;
+  border: 1px solid rgba(125, 180, 255, 0.35);
+  background: #111118;
+  overflow: hidden;
+}
+
+.legend {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.legend-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.legend-swatch {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  margin-top: 0.25rem;
+}
+
+.legend-item strong,
+.project-meta strong {
+  display: block;
+}
+
+.legend-item p,
+.project-meta span {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+}
+
+.source-note {
+  font-size: 0.95rem;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-top,
+  .section-header,
+  .job-header,
+  .project-header {
+    flex-direction: column;
+  }
+
+  .page {
+    width: min(100vw - 1rem, 1120px);
+  }
+}
