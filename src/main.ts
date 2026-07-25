@@ -52,6 +52,12 @@ type HoleModel = {
   assays: AssayRow[];
 };
 
+type DrillholeInputSet = {
+  collarCsv: string;
+  surveyCsv: string;
+  assayCsv: string;
+};
+
 const COLLAR_CSV = `hole_id,x,y,z,total_depth
 DH001,500.0,1200.0,250.0,150.0
 DH002,580.0,1220.0,255.0,180.0`;
@@ -76,6 +82,12 @@ DH002,140.0,180.0,Granite,0.12,#CCCCCC`;
 
 const FEATURED_VISUALIZER_ORG = 'Imdex Limited';
 
+const DEFAULT_INPUTS: DrillholeInputSet = {
+  collarCsv: COLLAR_CSV,
+  surveyCsv: SURVEY_CSV,
+  assayCsv: ASSAY_CSV
+};
+
 const experience: ResumeEntry[] = [
   {
     title: 'Software Engineer',
@@ -93,10 +105,9 @@ const experience: ResumeEntry[] = [
     organization: 'Epic Safety',
     dates: 'Jul 2021 – Aug 2022',
     bullets: [
-      'Developed a backend API for collating and presenting IoT device data output.',
-      'Generated OpenAPI documentation   tsoa, hosted services on AWS, and used Postgres for persistence.',
-      'Integrated third-party APIs for accounting, device management, and account workflows.'
-    ]
+'Engineered a resilient IoT data-processing platform with Node.js and TypeScript, using AWS Lambda and ECS to continuously collect, process, and persist high-volume device data in PostgreSQL.',
+'Automated infrastructure as code (IaC) and delivery pipelines via CloudFormation and Docker, accelerating release cycles and simplifying cloud deployment across AWS environments.',
+'Drove cross-team collaboration by establishing OpenAPI standard documentation via tsoa/Swagger and integrating core 3rd-party platforms (CRM, subscription accounting, and device management).'  ]
   },
   {
     title: 'Full Stack Web Developer',
@@ -172,8 +183,8 @@ const academicProjects: ProjectEntry[] = [
   }
 ];
 
-const holeModels = buildHoleModels();
-const lithologyLegend = buildLithologyLegend(holeModels);
+let visualizerInputs: DrillholeInputSet = { ...DEFAULT_INPUTS };
+let holeModels = buildHoleModels(visualizerInputs);
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
@@ -243,7 +254,8 @@ themeToggle?.addEventListener('click', () => {
   setTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
 });
 
-createDrillholeScene(holeModels);
+let cleanupScene = createDrillholeScene(holeModels);
+initializeVisualizerControls();
 
 function renderRole(role: ResumeEntry) {
   const isFeaturedRole = role.organization === FEATURED_VISUALIZER_ORG;
@@ -271,10 +283,68 @@ function renderImdexVisualizer() {
   return `
     <aside class="role-visualizer">
       <div class="visualizer-layout">
-        <div class="visualizer-stage" id="visualizer" aria-label="Three dimensional drillhole visualizer"></div>
-        <div class="legend legend-inline" aria-label="Interval labels">
-          ${lithologyLegend.map(renderLegendItem).join('')}
-        </div>
+        <section class="visualizer-canvas-panel" aria-label="Drillhole visualizer">
+          <div class="visualizer-toolbar">
+            <h4>Drillhole Visualizer</h4>
+            <div class="visualizer-toolbar-actions">
+              <button
+                class="toggle-data-button"
+                id="toggle-trajectory-data"
+                type="button"
+                aria-controls="trajectory-data-section"
+                aria-expanded="false"
+              >
+                Show trajectory data
+              </button>
+              <button
+                class="toggle-legend-button"
+                id="toggle-legend"
+                type="button"
+                aria-controls="legend"
+                aria-expanded="false"
+              >
+                Show labels
+              </button>
+            </div>
+          </div>
+          <div class="visualizer-stage" id="visualizer" aria-label="Three dimensional drillhole visualizer"></div>
+          <div id="legend" class="legend-panel collapsible" aria-label="Interval labels">
+            <h5>Labels</h5>
+            <div id="legend-items" class="legend legend-inline">
+              ${buildLithologyLegend(holeModels).map(renderLegendItem).join('')}
+            </div>
+          </div>
+        </section>
+        <section id="trajectory-data-section" class="visualizer-data-panel collapsible" aria-label="Trajectory source data editor">
+          <div class="editor-header">
+            <h4>Trajectory Data</h4>
+            <div class="editor-actions">
+              <label class="auto-rebuild-toggle" for="auto-rebuild-toggle">
+                <input id="auto-rebuild-toggle" type="checkbox" checked />
+                Auto-rebuild
+              </label>
+              <button class="reset-button" id="reset-visualizer" type="button">Reset defaults</button>
+              <button class="rebuild-button" id="rebuild-visualizer" type="button">Rebuild visualizer</button>
+            </div>
+          </div>
+          <p class="visualizer-copy">Edit collar, survey, or assay CSV and rebuild to update the trajectory. </p>
+          <div class="csv-editors">
+            <label class="csv-editor-label" for="collar-csv-input">Collar CSV</label>
+            <p class="csv-schema">Columns: hole_id, x, y, z, total_depth</p>
+            <textarea id="collar-csv-input" class="csv-editor" spellcheck="false">${escapeHtml(visualizerInputs.collarCsv)}</textarea>
+            <label class="csv-editor-label" for="survey-csv-input">Survey CSV</label>
+            <p class="csv-schema">Columns: hole_id, depth, azimuth, dip</p>
+            <textarea id="survey-csv-input" class="csv-editor" spellcheck="false">${escapeHtml(visualizerInputs.surveyCsv)}</textarea>
+            <label class="csv-editor-label" for="assay-csv-input">Assay CSV</label>
+            <p class="csv-schema">Columns: hole_id, from_depth, to_depth, lithology, cu_pct, color_hex</p>
+            <textarea id="assay-csv-input" class="csv-editor" spellcheck="false">${escapeHtml(visualizerInputs.assayCsv)}</textarea>
+          </div>
+          <p id="visualizer-status" class="visualizer-status" role="status" aria-live="polite">Loaded default sample data.</p>
+          <div id="visualizer-errors" class="visualizer-errors" aria-live="polite" hidden>
+            <h5>Could not rebuild visualizer</h5>
+            <ul id="visualizer-error-list"></ul>
+          </div>
+        </section>
       </div>
     </aside>
   `;
@@ -316,12 +386,258 @@ function setTheme(theme: 'light' | 'dark') {
   }
 }
 
+function initializeVisualizerControls() {
+  const toggleDataButton = document.querySelector<HTMLButtonElement>('#toggle-trajectory-data');
+  const trajectoryDataSection = document.querySelector<HTMLElement>('#trajectory-data-section');
+  const toggleLegendButton = document.querySelector<HTMLButtonElement>('#toggle-legend');
+  const legendSection = document.querySelector<HTMLElement>('#legend');
+  const rebuildButton = document.querySelector<HTMLButtonElement>('#rebuild-visualizer');
+  const resetButton = document.querySelector<HTMLButtonElement>('#reset-visualizer');
+  const autoRebuildToggle = document.querySelector<HTMLInputElement>('#auto-rebuild-toggle');
+  const collarInput = document.querySelector<HTMLTextAreaElement>('#collar-csv-input');
+  const surveyInput = document.querySelector<HTMLTextAreaElement>('#survey-csv-input');
+  const assayInput = document.querySelector<HTMLTextAreaElement>('#assay-csv-input');
+  const status = document.querySelector<HTMLParagraphElement>('#visualizer-status');
+  const errorPanel = document.querySelector<HTMLDivElement>('#visualizer-errors');
+  const errorList = document.querySelector<HTMLUListElement>('#visualizer-error-list');
+
+  if (!toggleDataButton || !trajectoryDataSection || !toggleLegendButton || !legendSection || !rebuildButton || !resetButton || !autoRebuildToggle || !collarInput || !surveyInput || !assayInput || !status || !errorPanel || !errorList) {
+    return;
+  }
+
+  const setToggleLabel = (button: HTMLButtonElement, expanded: boolean, visibleLabel: string, hiddenLabel: string) => {
+    button.textContent = expanded ? visibleLabel : hiddenLabel;
+    button.setAttribute('aria-expanded', String(expanded));
+  };
+
+  const setCollapsibleState = (
+    target: HTMLElement,
+    button: HTMLButtonElement,
+    expanded: boolean,
+    expandedLabel: string,
+    collapsedLabel: string
+  ) => {
+    if (expanded) {
+      target.classList.remove('is-collapsed');
+      target.classList.add('is-open');
+      target.style.maxHeight = `${target.scrollHeight}px`;
+      target.style.opacity = '1';
+      window.setTimeout(() => {
+        if (target.classList.contains('is-open')) {
+          target.style.maxHeight = 'none';
+        }
+      }, 260);
+    } else {
+      target.classList.remove('is-collapsed');
+      const currentHeight = target.scrollHeight;
+      target.style.maxHeight = `${currentHeight}px`;
+      window.requestAnimationFrame(() => {
+        target.classList.remove('is-open');
+        target.style.maxHeight = '0px';
+        target.style.opacity = '0';
+      });
+
+      window.setTimeout(() => {
+        if (!target.classList.contains('is-open')) {
+          target.classList.add('is-collapsed');
+        }
+      }, 250);
+    }
+
+    setToggleLabel(button, expanded, expandedLabel, collapsedLabel);
+  };
+
+  let isTrajectoryDataOpen = false;
+  let isLegendOpen = false;
+
+  setCollapsibleState(trajectoryDataSection, toggleDataButton, isTrajectoryDataOpen, 'Hide trajectory data', 'Show trajectory data');
+  setCollapsibleState(legendSection, toggleLegendButton, isLegendOpen, 'Hide labels', 'Show labels');
+
+  const autoRebuildDelayMs = 700;
+  let autoRebuildTimer: number | undefined;
+
+  const getCurrentInputs = (): DrillholeInputSet => ({
+    collarCsv: collarInput.value.trim(),
+    surveyCsv: surveyInput.value.trim(),
+    assayCsv: assayInput.value.trim()
+  });
+
+  const clearErrors = () => {
+    errorPanel.hidden = true;
+    errorList.innerHTML = '';
+  };
+
+  const setErrors = (messages: string[]) => {
+    errorList.innerHTML = messages.map((message) => `<li>${escapeHtml(message)}</li>`).join('');
+    errorPanel.hidden = false;
+    status.textContent = 'Fix the data issues and rebuild again.';
+    status.dataset.state = 'error';
+  };
+
+  const setSuccess = (message: string) => {
+    clearErrors();
+    status.textContent = message;
+    status.dataset.state = 'success';
+  };
+
+  const validateAndBuildModels = (inputs: DrillholeInputSet) => {
+    const errors: string[] = [];
+
+    try {
+      parseCollars(inputs.collarCsv);
+    } catch (error) {
+      errors.push(`Collar CSV: ${error instanceof Error ? error.message : 'Invalid data.'}`);
+    }
+
+    try {
+      parseSurveyRows(inputs.surveyCsv);
+    } catch (error) {
+      errors.push(`Survey CSV: ${error instanceof Error ? error.message : 'Invalid data.'}`);
+    }
+
+    try {
+      parseAssayRows(inputs.assayCsv);
+    } catch (error) {
+      errors.push(`Assay CSV: ${error instanceof Error ? error.message : 'Invalid data.'}`);
+    }
+
+    if (errors.length > 0) {
+      return { errors };
+    }
+
+    try {
+      const models = buildHoleModels(inputs);
+
+      if (models.length === 0) {
+        return { errors: ['No valid drillholes were generated from the input rows.'] };
+      }
+
+      return { models, errors: [] as string[] };
+    } catch (error) {
+      return { errors: [error instanceof Error ? error.message : 'Unable to rebuild visualizer.'] };
+    }
+  };
+
+  const rebuild = (source: 'manual' | 'auto' = 'manual') => {
+    if (autoRebuildTimer) {
+      window.clearTimeout(autoRebuildTimer);
+      autoRebuildTimer = undefined;
+    }
+
+    const nextInputs = getCurrentInputs();
+    const result = validateAndBuildModels(nextInputs);
+
+    if (result.errors.length > 0 || !result.models) {
+      setErrors(result.errors);
+      return false;
+    }
+
+    visualizerInputs = nextInputs;
+    holeModels = result.models;
+    cleanupScene();
+    cleanupScene = createDrillholeScene(holeModels);
+    renderLegend(holeModels);
+    const message = source === 'auto'
+      ? `Auto-rebuilt from ${holeModels.length} hole model(s).`
+      : `Visualizer rebuilt from ${holeModels.length} hole model(s).`;
+    setSuccess(message);
+    return true;
+  };
+
+  const scheduleAutoRebuild = () => {
+    if (!autoRebuildToggle.checked) {
+      status.textContent = 'Auto-rebuild is off. Press Rebuild visualizer to apply changes.';
+      status.dataset.state = 'idle';
+      return;
+    }
+
+    if (autoRebuildTimer) {
+      window.clearTimeout(autoRebuildTimer);
+    }
+
+    status.textContent = 'Changes detected. Rebuilding shortly...';
+    status.dataset.state = 'pending';
+
+    autoRebuildTimer = window.setTimeout(() => {
+      rebuild('auto');
+    }, autoRebuildDelayMs);
+  };
+
+  const onEditorKeydown = (event: KeyboardEvent) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      rebuild('manual');
+    }
+  };
+
+  const onEditorInput = () => {
+    scheduleAutoRebuild();
+  };
+
+  rebuildButton.addEventListener('click', () => {
+    rebuild('manual');
+  });
+  toggleDataButton.addEventListener('click', () => {
+    isTrajectoryDataOpen = !isTrajectoryDataOpen;
+    setCollapsibleState(trajectoryDataSection, toggleDataButton, isTrajectoryDataOpen, 'Hide trajectory data', 'Show trajectory data');
+  });
+  toggleLegendButton.addEventListener('click', () => {
+    isLegendOpen = !isLegendOpen;
+    setCollapsibleState(legendSection, toggleLegendButton, isLegendOpen, 'Hide labels', 'Show labels');
+  });
+  resetButton.addEventListener('click', () => {
+    collarInput.value = DEFAULT_INPUTS.collarCsv;
+    surveyInput.value = DEFAULT_INPUTS.surveyCsv;
+    assayInput.value = DEFAULT_INPUTS.assayCsv;
+
+    if (autoRebuildToggle.checked) {
+      rebuild('manual');
+      status.textContent = 'Defaults restored and visualizer rebuilt.';
+      status.dataset.state = 'success';
+    } else {
+      clearErrors();
+      status.textContent = 'Defaults restored. Press Rebuild visualizer to apply changes.';
+      status.dataset.state = 'idle';
+    }
+  });
+  autoRebuildToggle.addEventListener('change', () => {
+    if (autoRebuildToggle.checked) {
+      scheduleAutoRebuild();
+    } else {
+      if (autoRebuildTimer) {
+        window.clearTimeout(autoRebuildTimer);
+        autoRebuildTimer = undefined;
+      }
+      status.textContent = 'Auto-rebuild is off. Press Rebuild visualizer to apply changes.';
+      status.dataset.state = 'idle';
+    }
+  });
+  collarInput.addEventListener('keydown', onEditorKeydown);
+  surveyInput.addEventListener('keydown', onEditorKeydown);
+  assayInput.addEventListener('keydown', onEditorKeydown);
+  collarInput.addEventListener('input', onEditorInput);
+  surveyInput.addEventListener('input', onEditorInput);
+  assayInput.addEventListener('input', onEditorInput);
+}
+
+function renderLegend(models: HoleModel[]) {
+  const legendContainer = document.querySelector<HTMLDivElement>('#legend-items');
+
+  if (!legendContainer) {
+    return;
+  }
+
+  legendContainer.innerHTML = buildLithologyLegend(models).map(renderLegendItem).join('');
+}
+
 function createDrillholeScene(models: HoleModel[]) {
   const mount = document.querySelector<HTMLDivElement>('#visualizer');
 
   if (!mount || models.length === 0) {
-    return;
+    return () => {};
   }
+
+  mount.innerHTML = '';
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, mount.clientWidth / mount.clientHeight, 0.1, 2000);
@@ -399,13 +715,37 @@ function createDrillholeScene(models: HoleModel[]) {
   const observer = new ResizeObserver(resize);
   observer.observe(mount);
 
+  let frameId = 0;
   const animate = () => {
     controls.update();
     renderer.render(scene, camera);
-    window.requestAnimationFrame(animate);
+    frameId = window.requestAnimationFrame(animate);
   };
 
   animate();
+
+  return () => {
+    observer.disconnect();
+    if (frameId) {
+      window.cancelAnimationFrame(frameId);
+    }
+    controls.dispose();
+    scene.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (mesh.geometry) {
+        mesh.geometry.dispose();
+      }
+
+      const material = mesh.material;
+      if (Array.isArray(material)) {
+        material.forEach((item) => item.dispose());
+      } else if (material) {
+        material.dispose();
+      }
+    });
+    renderer.dispose();
+    mount.innerHTML = '';
+  };
 }
 
 function makeTextSprite(text: string) {
@@ -502,10 +842,10 @@ function interpolatePathPoint(path: HolePathPoint[], depth: number) {
   return finalPoint.position.clone();
 }
 
-function buildHoleModels(): HoleModel[] {
-  const collars = parseCollars(COLLAR_CSV);
-  const surveys = parseSurveyRows(SURVEY_CSV);
-  const assays = parseAssayRows(ASSAY_CSV);
+function buildHoleModels(inputs: DrillholeInputSet): HoleModel[] {
+  const collars = parseCollars(inputs.collarCsv);
+  const surveys = parseSurveyRows(inputs.surveyCsv);
+  const assays = parseAssayRows(inputs.assayCsv);
 
   const center = computeCollarCenter(collars);
   const surveyByHole = groupBy(surveys, (row) => row.hole_id);
@@ -681,6 +1021,10 @@ function parseAssayRows(csv: string): AssayRow[] {
 }
 
 function parseCSV(csv: string) {
+  if (!csv.trim()) {
+    throw new Error('CSV input cannot be empty.');
+  }
+
   const lines = csv.trim().split(/\r?\n/);
   const header = lines[0].split(',').map((cell) => cell.trim());
 
@@ -725,4 +1069,11 @@ function groupBy<T>(items: T[], keySelector: (item: T) => string) {
 
 function lerp(start: number, end: number, factor: number) {
   return start + (end - start) * factor;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
