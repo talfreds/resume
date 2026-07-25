@@ -186,19 +186,10 @@ app.innerHTML = `
     <section class="hero">
       <div class="hero-top">
         <div>
-          <div class="eyebrow">Resume Portfolio</div>
+          <div class="eyebrow">Resume</div>
           <h1>Tyler Alfreds</h1>
         </div>
         <button class="theme-toggle" type="button" aria-label="Toggle light and dark mode">Toggle theme</button>
-      </div>
-      <p class="summary">
-        Software engineer with a background spanning data-heavy backend systems, customer-facing product work, and infrastructure tooling.
-        This TypeScript portfolio condenses resume highlights and now includes a CSV-driven Three.js drillhole prototype.
-      </p>
-      <div class="quick-facts">
-        <span class="pill">TypeScript portfolio build</span>
-        <span class="pill">Light / dark mode</span>
-        <span class="pill">CSV drillhole geometry</span>
       </div>
     </section>
 
