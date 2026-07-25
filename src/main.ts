@@ -185,6 +185,7 @@ const academicProjects: ProjectEntry[] = [
 
 let visualizerInputs: DrillholeInputSet = { ...DEFAULT_INPUTS };
 let holeModels = buildHoleModels(visualizerInputs);
+let applyVisualizerTheme: (theme: 'light' | 'dark') => void = () => {};
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
@@ -380,6 +381,7 @@ function renderLegendItem(item: { lithology: string; color: string; maxCu: numbe
 function setTheme(theme: 'light' | 'dark') {
   document.body.dataset.theme = theme;
   window.localStorage.setItem('theme', theme);
+  applyVisualizerTheme(theme);
 
   if (themeToggle) {
     themeToggle.textContent = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
@@ -634,6 +636,7 @@ function createDrillholeScene(models: HoleModel[]) {
   const mount = document.querySelector<HTMLDivElement>('#visualizer');
 
   if (!mount || models.length === 0) {
+    applyVisualizerTheme = () => {};
     return () => {};
   }
 
@@ -645,8 +648,14 @@ function createDrillholeScene(models: HoleModel[]) {
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor('#111118', 1);
+  const getVisualizerBackground = (theme: 'light' | 'dark') => theme === 'dark' ? '#111118' : '#e5ebf5';
+  const activeTheme = document.body.dataset.theme === 'dark' ? 'dark' : 'light';
+  renderer.setClearColor(getVisualizerBackground(activeTheme), 1);
   mount.append(renderer.domElement);
+
+  applyVisualizerTheme = (theme: 'light' | 'dark') => {
+    renderer.setClearColor(getVisualizerBackground(theme), 1);
+  };
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
@@ -725,6 +734,7 @@ function createDrillholeScene(models: HoleModel[]) {
   animate();
 
   return () => {
+    applyVisualizerTheme = () => {};
     observer.disconnect();
     if (frameId) {
       window.cancelAnimationFrame(frameId);
