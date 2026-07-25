@@ -198,10 +198,8 @@ li + li {
   aspect-ratio: 4 / 3;
   min-height: 280px;
   border-radius: 20px;
-  border: 1px solid var(--border);
-  background:
-    linear-gradient(180deg, rgba(125, 180, 255, 0.1), rgba(35, 88, 210, 0.02)),
-    var(--panel-strong);
+  border: 1px solid rgba(125, 180, 255, 0.35);
+  background: #111118;
   overflow: hidden;
 }
 
