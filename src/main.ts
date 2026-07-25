@@ -2,11 +2,6 @@ import './styles.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-type SkillGroup = {
-  title: string;
-  items: string[];
-};
-
 type ResumeEntry = {
   title: string;
   organization: string;
@@ -79,20 +74,7 @@ DH002,15.0,70.0,Schist,0.22,#708090
 DH002,70.0,140.0,Copper_Porphyry,2.10,#FF4500
 DH002,140.0,180.0,Granite,0.12,#CCCCCC`;
 
-const skillGroups: SkillGroup[] = [
-  {
-    title: 'Programming',
-    items: ['Python', 'C / C++', 'JavaScript & Node.js', 'TypeScript', 'React.js & React Native', 'Bash', 'Java (JVM & Android)']
-  },
-  {
-    title: 'Data & Analytics',
-    items: ['Postgres, MySQL, MariaDB, SQLite', 'T-SQL / SQL Server', 'MongoDB & Firebase', 'SQLAlchemy ORM', 'ODBC, JDBC, OLAP, Oracle', 'R, Tableau, Power BI, Excel']
-  },
-  {
-    title: 'Platforms & Tooling',
-    items: ['Docker, Vagrant, Ansible', 'Jenkins, Apache, SonarQube', 'GitHub & GitLab', 'VirtualBox / VMware', 'Wireshark & TCPDump', 'npm, Yarn, pnpm, Webpack, Travis CI']
-  }
-];
+const FEATURED_VISUALIZER_ORG = 'Imdex Limited';
 
 const experience: ResumeEntry[] = [
   {
@@ -100,10 +82,11 @@ const experience: ResumeEntry[] = [
     organization: 'Imdex Limited',
     dates: 'Aug 2022 – Present',
     bullets: [
-      'Build software that helps technical teams work with operational and geological data in mining workflows.',
-      'Translate complex drillhole information into product-ready interfaces and visualization concepts for faster interpretation.',
-      'Iterating on a TypeScript + Three.js drillhole visualizer that highlights inferred mineral intervals inspired by public Flin Flon exploration data.'
-    ]
+  'Engineered web-based 3D visualizers using Three.js and ParaView across React and Vue to render interactive drillhole pathways, volumetric models, and subsurface spatial data.',
+  'Architected frontend applications in Angular for a cloud-based data portal that ingests and validates near-real-time drilling, structural, and downhole survey data streamed directly from field rigs.',
+  'Translated complex rock characterization and mineralogy datasets into product-ready user interfaces, streamlining data validation workflows for geoscientists.',
+  'Built full-stack web services and APIs (Express/C#) to enable secure end-to-end data transfer between rig-site hardware sensors and cloud analytics platforms.',
+]
   },
   {
     title: 'Back End Developer',
@@ -111,7 +94,7 @@ const experience: ResumeEntry[] = [
     dates: 'Jul 2021 – Aug 2022',
     bullets: [
       'Developed a backend API for collating and presenting IoT device data output.',
-      'Generated OpenAPI documentation with tsoa, hosted services on AWS, and used Postgres for persistence.',
+      'Generated OpenAPI documentation   tsoa, hosted services on AWS, and used Postgres for persistence.',
       'Integrated third-party APIs for accounting, device management, and account workflows.'
     ]
   },
@@ -204,7 +187,7 @@ app.innerHTML = `
       <div class="hero-top">
         <div>
           <div class="eyebrow">Resume Portfolio</div>
-          <h1>Taylor Alfreds</h1>
+          <h1>Tyler Alfreds</h1>
         </div>
         <button class="theme-toggle" type="button" aria-label="Toggle light and dark mode">Toggle theme</button>
       </div>
@@ -225,32 +208,11 @@ app.innerHTML = `
           <div class="section-header">
             <div>
               <div class="eyebrow">Work experience</div>
-              <h2>Recent roles</h2>
             </div>
           </div>
           <div class="section-list">
             ${experience.map(renderRole).join('')}
           </div>
-        </article>
-
-        <article class="card visualizer">
-          <div>
-            <div class="eyebrow">Imdex visualization concept</div>
-            <h2>3D drillhole from collar/survey/assay CSV</h2>
-          </div>
-          <p class="visualizer-copy">
-            This iteration computes 3D trajectories from azimuth and dip survey stations, recenters collars around the scene origin,
-            and renders assay intervals as color-coded cylindrical segments with copper-grade radius scaling.
-          </p>
-          <div class="visualizer-stage" id="visualizer" aria-label="Three dimensional drillhole visualizer"></div>
-          <div class="legend">
-            ${lithologyLegend.map(renderLegendItem).join('')}
-          </div>
-          <p class="source-note">
-            Dataset inspiration:
-            <a href="https://osdp-psdo.canada.ca/dp/en/search/metadata/NRCAN-GEOSCAN-1-288062">NRCan Flin Flon exploration metadata</a>.
-            Demo data includes 2 drillholes (DH001, DH002) using representative collar, survey, and assay interval structure.
-          </p>
         </article>
 
         <article class="card">
@@ -266,16 +228,6 @@ app.innerHTML = `
           </div>
         </article>
       </div>
-
-      <aside class="column">
-        <article class="card">
-          <div class="eyebrow">Technical skills</div>
-          <h2>Core stack</h2>
-          <div class="skills-groups">
-            ${skillGroups.map(renderSkillGroup).join('')}
-          </div>
-        </article>
-      </aside>
     </section>
   </main>
 `;
@@ -293,19 +245,46 @@ themeToggle?.addEventListener('click', () => {
 createDrillholeScene(holeModels);
 
 function renderRole(role: ResumeEntry) {
+  const isFeaturedRole = role.organization === FEATURED_VISUALIZER_ORG;
+
   return `
-    <section class="role">
-      <div class="job-header">
-        <div>
-          <h3>${role.title}</h3>
-          <div class="meta">${role.organization}</div>
+    <section class="role${isFeaturedRole ? ' role-with-visualizer' : ''}">
+      <div class="role-main">
+        <div class="job-header">
+          <div>
+            <h3>${role.title}</h3>
+            <div class="meta">${role.organization}</div>
+          </div>
+          <div class="meta">${role.dates}</div>
         </div>
-        <div class="meta">${role.dates}</div>
+        <ul>
+          ${role.bullets.map((bullet) => `<li>${bullet}</li>`).join('')}
+        </ul>
       </div>
-      <ul>
-        ${role.bullets.map((bullet) => `<li>${bullet}</li>`).join('')}
-      </ul>
+      ${isFeaturedRole ? renderImdexVisualizer() : ''}
     </section>
+  `;
+}
+
+function renderImdexVisualizer() {
+  return `
+    <aside class="role-visualizer">
+      <div>
+        <div class="eyebrow">Imdex visualization concept</div>
+        <h4>3D drillhole from collar/survey/assay CSV</h4>
+      </div>
+      <p class="visualizer-copy">
+        Computes 3D trajectories from azimuth and dip survey stations, then renders assay intervals as color-coded cylindrical segments with copper-grade radius scaling.
+      </p>
+      <div class="visualizer-stage" id="visualizer" aria-label="Three dimensional drillhole visualizer"></div>
+      <div class="legend">
+        ${lithologyLegend.map(renderLegendItem).join('')}
+      </div>
+      <p class="source-note">
+        Dataset inspiration:
+        <a href="https://osdp-psdo.canada.ca/dp/en/search/metadata/NRCAN-GEOSCAN-1-288062">NRCan Flin Flon exploration metadata</a>.
+      </p>
+    </aside>
   `;
 }
 
@@ -322,15 +301,6 @@ function renderProject(project: ProjectEntry) {
           <span>${project.dates}</span>
         </div>
       </div>
-    </section>
-  `;
-}
-
-function renderSkillGroup(group: SkillGroup) {
-  return `
-    <section class="skills-group">
-      <h3>${group.title}</h3>
-      <p>${group.items.join(' • ')}</p>
     </section>
   `;
 }

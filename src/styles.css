@@ -1,26 +1,26 @@
 :root {
   color-scheme: light dark;
-  --bg: #f4f7fb;
-  --panel: rgba(255, 255, 255, 0.88);
+  --bg: #f6f1e9;
+  --panel: rgba(255, 251, 244, 0.9);
   --panel-strong: #ffffff;
-  --text: #172033;
-  --muted: #51607a;
-  --border: rgba(23, 32, 51, 0.12);
-  --accent: #2358d2;
-  --accent-soft: rgba(35, 88, 210, 0.12);
-  --shadow: 0 24px 80px rgba(15, 23, 42, 0.12);
+  --text: #1f2330;
+  --muted: #5a6275;
+  --border: rgba(31, 35, 48, 0.12);
+  --accent: #0e7a65;
+  --accent-soft: rgba(14, 122, 101, 0.12);
+  --shadow: 0 24px 70px rgba(35, 29, 16, 0.13);
 }
 
 body[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #09111f;
-  --panel: rgba(10, 20, 36, 0.92);
-  --panel-strong: #111d31;
-  --text: #edf3ff;
-  --muted: #9fb2d4;
-  --border: rgba(159, 178, 212, 0.16);
-  --accent: #7db4ff;
-  --accent-soft: rgba(125, 180, 255, 0.14);
+  --bg: #11161f;
+  --panel: rgba(19, 27, 38, 0.92);
+  --panel-strong: #182334;
+  --text: #edf6ff;
+  --muted: #afc0d8;
+  --border: rgba(175, 192, 216, 0.18);
+  --accent: #67d5b0;
+  --accent-soft: rgba(103, 213, 176, 0.14);
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
 
@@ -30,9 +30,10 @@ body[data-theme='dark'] {
 
 body {
   margin: 0;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
   background:
-    radial-gradient(circle at top, rgba(35, 88, 210, 0.15), transparent 34%),
+    radial-gradient(circle at 12% -8%, rgba(14, 122, 101, 0.22), transparent 34%),
+    radial-gradient(circle at 90% 8%, rgba(207, 145, 61, 0.2), transparent 30%),
     var(--bg);
   color: var(--text);
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -109,7 +110,7 @@ button {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
   margin-top: 1.5rem;
 }
@@ -134,6 +135,31 @@ button {
   padding: 1rem 0;
 }
 
+.role-main {
+  display: grid;
+  gap: 1rem;
+}
+
+.role-with-visualizer {
+  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+  align-items: start;
+  gap: 1.2rem;
+}
+
+.role-visualizer {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(170deg, var(--panel-strong), color-mix(in oklab, var(--panel-strong), var(--accent-soft) 25%));
+}
+
+.role-visualizer h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
 .role + .role,
 .project + .project {
   border-top: 1px solid var(--border);
@@ -152,26 +178,16 @@ button {
 }
 
 .section-list,
-.skills-groups,
 .project-list {
   display: grid;
   gap: 1rem;
 }
 
-.skills-group {
-  padding: 1rem;
-  border-radius: 18px;
-  background: var(--panel-strong);
-  border: 1px solid var(--border);
-}
-
-.skills-group h3,
 .project h3,
 .role h3 {
   margin: 0 0 0.5rem;
 }
 
-.skills-group p,
 .project p,
 .source-note,
 .visualizer-copy {
@@ -188,17 +204,12 @@ li + li {
   margin-top: 0.45rem;
 }
 
-.visualizer {
-  display: grid;
-  gap: 1rem;
-}
-
 .visualizer-stage {
   width: 100%;
-  aspect-ratio: 4 / 3;
-  min-height: 280px;
+  aspect-ratio: 6 / 5;
+  min-height: 220px;
   border-radius: 20px;
-  border: 1px solid rgba(125, 180, 255, 0.35);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, white 55%);
   background: #111118;
   overflow: hidden;
 }
@@ -238,15 +249,20 @@ li + li {
 }
 
 @media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
   .hero-top,
   .section-header,
   .job-header,
   .project-header {
     flex-direction: column;
+  }
+
+  .role-with-visualizer {
+    grid-template-columns: 1fr;
+  }
+
+  .visualizer-stage {
+    aspect-ratio: 16 / 10;
+    min-height: 240px;
   }
 
   .page {
