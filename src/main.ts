@@ -222,9 +222,19 @@ app.innerHTML = `
               <h2>Personal and academic work</h2>
             </div>
           </div>
-          <div class="project-list">
-            ${personalProjects.map(renderProject).join('')}
-            ${academicProjects.map(renderProject).join('')}
+          <div class="project-groups">
+            <section class="project-group" aria-label="Personal projects">
+              <h3 class="project-group-title">Personal projects</h3>
+              <div class="project-list">
+                ${personalProjects.map(renderProject).join('')}
+              </div>
+            </section>
+            <section class="project-group" aria-label="Academic projects">
+              <h3 class="project-group-title">Academic projects</h3>
+              <div class="project-list">
+                ${academicProjects.map(renderProject).join('')}
+              </div>
+            </section>
           </div>
         </article>
       </div>
@@ -269,21 +279,12 @@ function renderRole(role: ResumeEntry) {
 function renderImdexVisualizer() {
   return `
     <aside class="role-visualizer">
-      <div>
-        <div class="eyebrow">Imdex visualization concept</div>
-        <h4>3D drillhole from collar/survey/assay CSV</h4>
+      <div class="visualizer-layout">
+        <div class="visualizer-stage" id="visualizer" aria-label="Three dimensional drillhole visualizer"></div>
+        <div class="legend legend-inline" aria-label="Interval labels">
+          ${lithologyLegend.map(renderLegendItem).join('')}
+        </div>
       </div>
-      <p class="visualizer-copy">
-        Computes 3D trajectories from azimuth and dip survey stations, then renders assay intervals as color-coded cylindrical segments with copper-grade radius scaling.
-      </p>
-      <div class="visualizer-stage" id="visualizer" aria-label="Three dimensional drillhole visualizer"></div>
-      <div class="legend">
-        ${lithologyLegend.map(renderLegendItem).join('')}
-      </div>
-      <p class="source-note">
-        Dataset inspiration:
-        <a href="https://osdp-psdo.canada.ca/dp/en/search/metadata/NRCAN-GEOSCAN-1-288062">NRCan Flin Flon exploration metadata</a>.
-      </p>
     </aside>
   `;
 }
@@ -291,15 +292,13 @@ function renderImdexVisualizer() {
 function renderProject(project: ProjectEntry) {
   return `
     <section class="project">
-      <div class="project-header">
-        <div>
-          <h3>${project.title}</h3>
-          <p>${project.description}</p>
-        </div>
-        <div class="project-meta">
-          <strong>${project.stack}</strong>
-          <span>${project.dates}</span>
-        </div>
+      <div class="project-top">
+        <h4>${project.title}</h4>
+        <span class="project-dates">${project.dates}</span>
+      </div>
+      <p class="project-description">${project.description}</p>
+      <div class="project-meta">
+        <strong>${project.stack}</strong>
       </div>
     </section>
   `;

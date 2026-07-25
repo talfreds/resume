@@ -148,16 +148,18 @@ button {
 
 .role-visualizer {
   display: grid;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: 0.5rem;
+  padding: 0.8rem;
   border-radius: 18px;
   border: 1px solid var(--border);
   background: linear-gradient(170deg, var(--panel-strong), color-mix(in oklab, var(--panel-strong), var(--accent-soft) 25%));
 }
 
-.role-visualizer h4 {
-  margin: 0;
-  font-size: 1rem;
+.visualizer-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(165px, 0.44fr);
+  gap: 0.65rem;
+  align-items: stretch;
 }
 
 .role + .role,
@@ -183,9 +185,60 @@ button {
   gap: 1rem;
 }
 
+.project-groups {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.project-group {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.project-group + .project-group {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.project-group-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
 .project h3,
 .role h3 {
   margin: 0 0 0.5rem;
+}
+
+.project {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.project-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.project-top h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.project-dates {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.project-description {
+  margin: 0;
+  color: var(--muted);
 }
 
 .project p,
@@ -206,9 +259,10 @@ li + li {
 
 .visualizer-stage {
   width: 100%;
-  aspect-ratio: 6 / 5;
-  min-height: 220px;
-  border-radius: 20px;
+  aspect-ratio: 5 / 4;
+  min-height: 180px;
+  max-height: 250px;
+  border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, white 55%);
   background: #111118;
   overflow: hidden;
@@ -216,13 +270,20 @@ li + li {
 
 .legend {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.65rem;
+}
+
+.legend-inline {
+  align-content: start;
+  max-height: 100%;
+  overflow: auto;
+  padding-right: 0.2rem;
 }
 
 .legend-item {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.8rem;
+  gap: 0.55rem;
   align-items: start;
 }
 
@@ -238,10 +299,25 @@ li + li {
   display: block;
 }
 
+.project-meta {
+  display: flex;
+  align-items: center;
+}
+
+.project-meta strong {
+  font-size: 0.9rem;
+  font-weight: 650;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent-soft) 42%, transparent);
+}
+
 .legend-item p,
 .project-meta span {
   margin: 0.15rem 0 0;
   color: var(--muted);
+  font-size: 0.86rem;
 }
 
 .source-note {
@@ -256,13 +332,32 @@ li + li {
     flex-direction: column;
   }
 
+  .project-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .project-dates {
+    white-space: normal;
+  }
+
   .role-with-visualizer {
     grid-template-columns: 1fr;
   }
 
+  .visualizer-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .legend-inline {
+    max-height: none;
+    overflow: visible;
+  }
+
   .visualizer-stage {
     aspect-ratio: 16 / 10;
-    min-height: 240px;
+    min-height: 220px;
+    max-height: none;
   }
 
   .page {
