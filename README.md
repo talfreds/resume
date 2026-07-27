@@ -1,8 +1,19 @@
 # resume
 
-A TypeScript resume portfolio site with light/dark themes and a Three.js drillhole visualizer concept for the latest Imdex Limited role.
+A TypeScript resume portfolio site built with Vite. The app includes:
 
-## Development
+- Resume content with light and dark themes
+- A Three.js drillhole visualizer (lazy loaded)
+- A Lighthouse results page that surfaces performance optimization outcomes
+- A playable Minesweeper page with preset and custom difficulty
+
+## Tech Stack
+
+- TypeScript
+- Vite
+- Three.js
+
+## Local Development
 
 ```bash
 npm install
@@ -15,10 +26,28 @@ npm run dev
 npm run build
 ```
 
-## Deploy to GitHub Pages
+## App Routes
 
-A GitHub Actions workflow is included at `/home/runner/work/resume/resume/.github/workflows/deploy.yml`.
+- `/` - Resume page
+- `/lighthouse-results` - Performance and Lighthouse results
+- `/minesweeper` - Minesweeper game
 
-1. In GitHub, go to **Settings → Pages**.
+## GitHub Pages Deployment
+
+The GitHub Actions workflow lives at `.github/workflows/deploy.yml`.
+
+1. In GitHub, open repository **Settings -> Pages**.
 2. Set **Source** to **GitHub Actions**.
-3. Push to `main` (or run the workflow manually) to deploy the latest build.
+3. Push to `main` (or run the workflow manually) to deploy.
+
+## Deep-Link Refresh Routing
+
+Because this is a client-side app deployed on GitHub Pages, deep-link refreshes are handled through [public/404.html](public/404.html), which redirects unmatched paths back to the app entry route.
+
+## Performance Documentation
+
+Supporting docs for performance hardening and Lighthouse result presentation are in:
+
+- [PERFORMANCE_PLAN.md](PERFORMANCE_PLAN.md)
+- [PERFORMANCE_IMPLEMENTATION.md](PERFORMANCE_IMPLEMENTATION.md)
+- [LIGHTHOUSE_RESULTS_FEATURE.md](LIGHTHOUSE_RESULTS_FEATURE.md)

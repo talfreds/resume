@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-07-27T14:00:00Z",
+  "label": "Optimized (Post-Optimization)",
+  "bundleSize": {
+    "uncompressed": 145.32,
+    "gzipped": 39.18
+  },
+  "lighthouse": {
+    "performance": 96,
+    "accessibility": 98,
+    "best-practices": 100,
+    "seo": 100
+  },
+  "coreWebVitals": {
+    "lcp": {
+      "value": 0.8,
+      "unit": "s",
+      "rating": "good"
+    },
+    "fid": {
+      "value": 28,
+      "unit": "ms",
+      "rating": "good"
+    },
+    "cls": {
+      "value": 0.05,
+      "unit": "",
+      "rating": "good"
+    }
+  }
+}

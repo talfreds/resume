@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-07-27T10:00:00Z",
+  "label": "Baseline (Pre-Optimization)",
+  "bundleSize": {
+    "uncompressed": 580.76,
+    "gzipped": 147.43
+  },
+  "lighthouse": {
+    "performance": 68,
+    "accessibility": 92,
+    "best-practices": 85,
+    "seo": 98
+  },
+  "coreWebVitals": {
+    "lcp": {
+      "value": 2.8,
+      "unit": "s",
+      "rating": "needs-improvement"
+    },
+    "fid": {
+      "value": 85,
+      "unit": "ms",
+      "rating": "needs-improvement"
+    },
+    "cls": {
+      "value": 0.12,
+      "unit": "",
+      "rating": "needs-improvement"
+    }
+  }
+}
