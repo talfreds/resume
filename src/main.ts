@@ -58,6 +58,32 @@ type DrillholeInputSet = {
   assayCsv: string;
 };
 
+type SiteRoute = 'resume' | 'lighthouse-results' | 'minesweeper';
+
+type GameStatus = 'ready' | 'playing' | 'won' | 'lost';
+
+type MinesweeperDifficulty = 'beginner' | 'intermediate' | 'expert' | 'custom';
+
+type MinesweeperCell = {
+  hasMine: boolean;
+  revealed: boolean;
+  flagged: boolean;
+  adjacentMines: number;
+};
+
+type MinesweeperState = {
+  difficulty: MinesweeperDifficulty;
+  rows: number;
+  cols: number;
+  mines: number;
+  board: MinesweeperCell[][];
+  status: GameStatus;
+  safeCellsRevealed: number;
+  elapsedMs: number;
+  startedAt: number | null;
+  finishedAt: number | null;
+};
+
 const COLLAR_CSV = `hole_id,x,y,z,total_depth
 DH001,500.0,1200.0,250.0,150.0
 DH002,580.0,1220.0,255.0,180.0`;
@@ -81,6 +107,15 @@ DH002,70.0,140.0,Copper_Porphyry,2.10,#FF4500
 DH002,140.0,180.0,Granite,0.12,#CCCCCC`;
 
 const FEATURED_VISUALIZER_ORG = 'Imdex Limited';
+const GITHUB_PROFILE_URL = 'https://github.com/talfreds';
+const LIGHTHOUSE_PATH = '/lighthouse-results';
+const MINESWEEPER_PATH = '/minesweeper';
+const MINESWEEPER_STORAGE_KEY = 'resume-minesweeper-v1';
+const MINESWEEPER_PRESETS: Record<Exclude<MinesweeperDifficulty, 'custom'>, { rows: number; cols: number; mines: number }> = {
+  beginner: { rows: 9, cols: 9, mines: 10 },
+  intermediate: { rows: 16, cols: 16, mines: 40 },
+  expert: { rows: 16, cols: 30, mines: 99 }
+};
 
 const DEFAULT_INPUTS: DrillholeInputSet = {
   collarCsv: COLLAR_CSV,
@@ -95,7 +130,7 @@ const experience: ResumeEntry[] = [
     dates: 'Aug 2022 – Present',
     bullets: [
   'Engineered web-based 3D visualizers using Three.js and ParaView across React and Vue to render interactive drillhole pathways, volumetric models, and subsurface spatial data.',
-  'Architected frontend applications in Angular for a cloud-based data portal that ingests and validates near-real-time drilling, structural, and downhole survey data streamed directly from field rigs.',
+  'Enhanced and expanded frontend applications in Angular for a cloud-based data portal that ingests and validates near-real-time drilling, structural, and downhole survey data streamed directly from field rigs.',
   'Translated complex rock characterization and mineralogy datasets into product-ready user interfaces, streamlining data validation workflows for geoscientists.',
   'Built full-stack web services and APIs (Express/C#) to enable secure end-to-end data transfer between rig-site hardware sensors and cloud analytics platforms.',
 ]
@@ -186,6 +221,11 @@ const academicProjects: ProjectEntry[] = [
 let visualizerInputs: DrillholeInputSet = { ...DEFAULT_INPUTS };
 let holeModels = buildHoleModels(visualizerInputs);
 let applyVisualizerTheme: (theme: 'light' | 'dark') => void = () => {};
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let cleanupScene: () => void = () => {};
+let cleanupVisualizerShortcuts: (() => void) | null = null;
+let cleanupMinesweeperTicker: (() => void) | null = null;
+let themeToggle: HTMLButtonElement | null = null;
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
@@ -193,18 +233,96 @@ if (!app) {
   throw new Error('App container not found.');
 }
 
-app.innerHTML = `
-  <main class="page">
-    <section class="hero">
-      <div class="hero-top">
-        <div>
-          <div class="eyebrow">Resume</div>
-          <h1>Tyler Alfreds</h1>
-        </div>
-        <button class="theme-toggle" type="button" aria-label="Toggle light and dark mode">Toggle theme</button>
-      </div>
-    </section>
+const appRoot = app;
 
+const storedTheme = window.localStorage.getItem('theme');
+const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : systemPrefersDark ? 'dark' : 'light';
+
+setTheme(initialTheme);
+document.addEventListener('click', onRouteLinkClick);
+window.addEventListener('popstate', () => {
+  renderCurrentRoute();
+});
+renderCurrentRoute();
+
+function onRouteLinkClick(event: MouseEvent) {
+  if (event.defaultPrevented) {
+    return;
+  }
+
+  const target = event.target;
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const link = target.closest<HTMLAnchorElement>('a[data-route-link]');
+  if (!link) {
+    return;
+  }
+
+  const href = link.getAttribute('href');
+  if (!href || href.startsWith('http')) {
+    return;
+  }
+
+  event.preventDefault();
+  navigateTo(href);
+}
+
+function navigateTo(path: string) {
+  const next = path.startsWith('/') ? path : `/${path}`;
+  if (window.location.pathname !== next) {
+    window.history.pushState({}, '', next);
+  }
+  renderCurrentRoute();
+}
+
+function resolveRoute(pathname: string): SiteRoute {
+  if (pathname === LIGHTHOUSE_PATH) {
+    return 'lighthouse-results';
+  }
+
+  if (pathname === MINESWEEPER_PATH) {
+    return 'minesweeper';
+  }
+
+  return 'resume';
+}
+
+function navLink(href: string, label: string, isActive: boolean) {
+  return `<a data-route-link="true" href="${href}" class="${isActive ? 'is-active' : ''}" aria-current="${isActive ? 'page' : 'false'}">${label}</a>`;
+}
+
+function renderShell(route: SiteRoute, content: string) {
+  return `
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <main class="page" id="main-content" tabindex="-1">
+      <section class="hero">
+        <div class="hero-header">
+          <h1 class="hero-name">Tyler Alfreds</h1>
+          <nav class="page-links" aria-label="Site pages">
+            ${navLink('/', 'Resume', route === 'resume')}
+            ${navLink(LIGHTHOUSE_PATH, 'Lighthouse Results', route === 'lighthouse-results')}
+            ${navLink(MINESWEEPER_PATH, 'Minesweeper', route === 'minesweeper')}
+            <button
+              class="theme-toggle"
+              type="button"
+              aria-label="Toggle light and dark mode"
+              aria-keyshortcuts="Alt+T"
+            >
+              Toggle theme
+            </button>
+          </nav>
+        </div>
+      </section>
+      ${content}
+    </main>
+  `;
+}
+
+function renderResumePage() {
+  return `
     <section class="layout">
       <div class="column">
         <article class="card">
@@ -242,21 +360,126 @@ app.innerHTML = `
         </article>
       </div>
     </section>
-  </main>
-`;
+  `;
+}
 
-const themeToggle = document.querySelector<HTMLButtonElement>('.theme-toggle');
-const storedTheme = window.localStorage.getItem('theme');
-const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : systemPrefersDark ? 'dark' : 'light';
+function renderLighthousePlaceholderPage() {
+  return `
+    <section class="layout page-layout-single">
+      <article class="card page-card">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow">Lighthouse Results</div>
+            <h1>Performance audit coming soon</h1>
+          </div>
+        </div>
+        <p class="page-copy">Placeholder page ready.</p>
+      </article>
+    </section>
+  `;
+}
 
-setTheme(initialTheme);
-themeToggle?.addEventListener('click', () => {
-  setTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
-});
+function renderMinesweeperPage() {
+  const state = loadMinesweeperState() ?? createMinesweeperState('beginner', MINESWEEPER_PRESETS.beginner.rows, MINESWEEPER_PRESETS.beginner.cols, MINESWEEPER_PRESETS.beginner.mines);
+  const minesLeft = state.mines - countFlags(state.board);
+  return `
+    <section class="layout page-layout-single">
+      <article class="card minesweeper-card">
+        <div class="section-header minesweeper-title-row">
+          <div>
+            <div class="eyebrow">Classic Minesweeper</div>
+          </div>
+        </div>
+        <div class="minesweeper-classic-window" role="application" aria-label="Classic Minesweeper game">
+          <fieldset class="minesweeper-settings" aria-label="Game difficulty">
+            <legend>Difficulty</legend>
+            ${renderDifficultyOption('beginner', state.difficulty)}
+            ${renderDifficultyOption('intermediate', state.difficulty)}
+            ${renderDifficultyOption('expert', state.difficulty)}
+            ${renderDifficultyOption('custom', state.difficulty)}
+            <label class="difficulty-custom-field" for="custom-rows">
+              Rows
+              <input id="custom-rows" type="number" min="9" max="24" value="${state.rows}" />
+            </label>
+            <label class="difficulty-custom-field" for="custom-cols">
+              Cols
+              <input id="custom-cols" type="number" min="9" max="30" value="${state.cols}" />
+            </label>
+            <label class="difficulty-custom-field" for="custom-mines">
+              Mines
+              <input id="custom-mines" type="number" min="10" max="668" value="${state.mines}" />
+            </label>
+            <button class="minesweeper-apply" type="button" id="minesweeper-apply-settings">Apply</button>
+          </fieldset>
+          <div class="minesweeper-hud" role="group" aria-label="Minesweeper controls and counters">
+            <div class="digit-display" id="minesweeper-mine-counter" aria-label="Mines left">${formatClassicCounter(minesLeft)}</div>
+            <button class="minesweeper-face" type="button" id="minesweeper-new" aria-label="Start new game">${getMinesweeperFace(state.status)}</button>
+            <div class="digit-display" id="minesweeper-timer" aria-label="Elapsed time">${formatClassicCounter(getElapsedSeconds(state))}</div>
+          </div>
+          <div class="minesweeper-board-frame">
+            <div class="minesweeper-board" id="minesweeper-board" style="grid-template-columns: repeat(${state.cols}, minmax(0, 1fr));" aria-label="Minesweeper board">
+              ${renderMinesweeperBoard(state)}
+            </div>
+          </div>
+        </div>
+        <div class="minesweeper-footer">
+          <span class="minesweeper-status-text" id="minesweeper-status-text">${buildMinesweeperStatusText(state)}</span>
+          <button class="minesweeper-reset-link" type="button" id="minesweeper-reset-save">Reset saved game</button>
+        </div>
+      </article>
+    </section>
+  `;
+}
 
-let cleanupScene = createDrillholeScene(holeModels);
-initializeVisualizerControls();
+function renderDifficultyOption(option: MinesweeperDifficulty, current: MinesweeperDifficulty) {
+  const labels: Record<MinesweeperDifficulty, string> = {
+    beginner: 'Beginner',
+    intermediate: 'Intermediate',
+    expert: 'Expert',
+    custom: 'Custom'
+  };
+
+  return `
+    <label class="difficulty-option" for="difficulty-${option}">
+      <input type="radio" id="difficulty-${option}" name="minesweeper-difficulty" value="${option}" ${current === option ? 'checked' : ''} />
+      ${labels[option]}
+    </label>
+  `;
+}
+
+function renderCurrentRoute() {
+  cleanupScene();
+  cleanupScene = () => {};
+  cleanupVisualizerShortcuts?.();
+  cleanupVisualizerShortcuts = null;
+  cleanupMinesweeperTicker?.();
+  cleanupMinesweeperTicker = null;
+  applyVisualizerTheme = () => {};
+
+  const route = resolveRoute(window.location.pathname);
+  if (route === 'resume') {
+    appRoot.innerHTML = renderShell(route, renderResumePage());
+  } else if (route === 'lighthouse-results') {
+    appRoot.innerHTML = renderShell(route, renderLighthousePlaceholderPage());
+  } else {
+    appRoot.innerHTML = renderShell(route, renderMinesweeperPage());
+  }
+
+  themeToggle = document.querySelector<HTMLButtonElement>('.theme-toggle');
+  themeToggle?.addEventListener('click', () => {
+    setTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
+  setTheme(document.body.dataset.theme === 'dark' ? 'dark' : 'light');
+
+  if (route === 'resume') {
+    cleanupScene = createDrillholeScene(holeModels);
+    initializeVisualizerControls();
+  }
+
+  if (route === 'minesweeper') {
+    initializeMinesweeperPage();
+  }
+}
 
 function renderRole(role: ResumeEntry) {
   const isFeaturedRole = role.organization === FEATURED_VISUALIZER_ORG;
@@ -294,6 +517,7 @@ function renderImdexVisualizer() {
                 type="button"
                 aria-controls="trajectory-data-section"
                 aria-expanded="false"
+                aria-keyshortcuts="Alt+D"
               >
                 Show trajectory data
               </button>
@@ -303,6 +527,7 @@ function renderImdexVisualizer() {
                 type="button"
                 aria-controls="legend"
                 aria-expanded="false"
+                aria-keyshortcuts="Alt+L"
               >
                 Show labels
               </button>
@@ -378,13 +603,756 @@ function renderLegendItem(item: { lithology: string; color: string; maxCu: numbe
   `;
 }
 
+function createMinesweeperState(difficulty: MinesweeperDifficulty, rows: number, cols: number, mines: number): MinesweeperState {
+  const board = createMinesweeperBoard(rows, cols, mines);
+  return {
+    difficulty,
+    rows,
+    cols,
+    mines,
+    board,
+    status: 'ready',
+    safeCellsRevealed: 0,
+    elapsedMs: 0,
+    startedAt: null,
+    finishedAt: null
+  };
+}
+
+function getDifficultyConfig(difficulty: MinesweeperDifficulty, custom?: { rows: number; cols: number; mines: number }) {
+  if (difficulty === 'custom' && custom) {
+    return normalizeCustomSettings(custom.rows, custom.cols, custom.mines);
+  }
+
+  return MINESWEEPER_PRESETS[difficulty as Exclude<MinesweeperDifficulty, 'custom'>] ?? MINESWEEPER_PRESETS.beginner;
+}
+
+function normalizeCustomSettings(rows: number, cols: number, mines: number) {
+  const normalizedRows = clamp(Math.floor(rows), 9, 24);
+  const normalizedCols = clamp(Math.floor(cols), 9, 30);
+  const maxMines = normalizedRows * normalizedCols - 1;
+  const normalizedMines = clamp(Math.floor(mines), 10, maxMines);
+
+  return {
+    rows: normalizedRows,
+    cols: normalizedCols,
+    mines: normalizedMines
+  };
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function createMinesweeperBoard(rows: number, cols: number, mines: number): MinesweeperCell[][] {
+  const board: MinesweeperCell[][] = Array.from({ length: rows }, () => Array.from({ length: cols }, () => ({
+    hasMine: false,
+    revealed: false,
+    flagged: false,
+    adjacentMines: 0
+  })));
+
+  const minePositions = new Set<number>();
+  while (minePositions.size < mines) {
+    minePositions.add(Math.floor(Math.random() * rows * cols));
+  }
+
+  for (const position of minePositions) {
+    const row = Math.floor(position / cols);
+    const col = position % cols;
+    board[row][col].hasMine = true;
+  }
+
+  recalculateAdjacentCounts(board);
+
+  return board;
+}
+
+function recalculateAdjacentCounts(board: MinesweeperCell[][]) {
+  const rows = board.length;
+  const cols = rows > 0 ? board[0].length : 0;
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      if (board[row][col].hasMine) {
+        board[row][col].adjacentMines = 0;
+        continue;
+      }
+
+      let adjacentMines = 0;
+      for (const [nextRow, nextCol] of getNeighbors(row, col, rows, cols)) {
+        if (board[nextRow][nextCol].hasMine) {
+          adjacentMines += 1;
+        }
+      }
+      board[row][col].adjacentMines = adjacentMines;
+    }
+  }
+}
+
+function ensureSafeFirstClick(state: MinesweeperState, row: number, col: number) {
+  const clicked = state.board[row]?.[col];
+  if (!clicked || !clicked.hasMine) {
+    return;
+  }
+
+  for (let targetRow = 0; targetRow < state.rows; targetRow += 1) {
+    for (let targetCol = 0; targetCol < state.cols; targetCol += 1) {
+      if (targetRow === row && targetCol === col) {
+        continue;
+      }
+
+      const target = state.board[targetRow][targetCol];
+      if (!target.hasMine) {
+        target.hasMine = true;
+        clicked.hasMine = false;
+        recalculateAdjacentCounts(state.board);
+        return;
+      }
+    }
+  }
+}
+
+function getNeighbors(row: number, col: number, rows: number, cols: number): Array<[number, number]> {
+  const neighbors: Array<[number, number]> = [];
+  for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
+    for (let colOffset = -1; colOffset <= 1; colOffset += 1) {
+      if (rowOffset === 0 && colOffset === 0) {
+        continue;
+      }
+
+      const nextRow = row + rowOffset;
+      const nextCol = col + colOffset;
+      if (nextRow >= 0 && nextRow < rows && nextCol >= 0 && nextCol < cols) {
+        neighbors.push([nextRow, nextCol]);
+      }
+    }
+  }
+
+  return neighbors;
+}
+
+function buildMinesweeperStatusText(state: MinesweeperState) {
+  if (state.status === 'won') {
+    return 'You cleared the board.';
+  }
+
+  if (state.status === 'lost') {
+    return 'Mine triggered.';
+  }
+
+  if (state.status === 'playing') {
+    return 'In progress.';
+  }
+
+  return 'Ready. Left click reveal. Right click flag.';
+}
+
+function getElapsedMs(state: MinesweeperState) {
+  if (state.status === 'playing' && state.startedAt) {
+    return state.elapsedMs + (Date.now() - state.startedAt);
+  }
+
+  return state.elapsedMs;
+}
+
+function getElapsedSeconds(state: MinesweeperState) {
+  return Math.max(0, Math.floor(getElapsedMs(state) / 1000));
+}
+
+function formatClassicCounter(value: number) {
+  const bounded = Math.max(-99, Math.min(999, value));
+  if (bounded < 0) {
+    return `-${Math.abs(bounded).toString().padStart(2, '0')}`;
+  }
+  return bounded.toString().padStart(3, '0');
+}
+
+function inferDifficulty(rows: number, cols: number, mines: number): MinesweeperDifficulty {
+  if (rows === MINESWEEPER_PRESETS.beginner.rows && cols === MINESWEEPER_PRESETS.beginner.cols && mines === MINESWEEPER_PRESETS.beginner.mines) {
+    return 'beginner';
+  }
+
+  if (rows === MINESWEEPER_PRESETS.intermediate.rows && cols === MINESWEEPER_PRESETS.intermediate.cols && mines === MINESWEEPER_PRESETS.intermediate.mines) {
+    return 'intermediate';
+  }
+
+  if (rows === MINESWEEPER_PRESETS.expert.rows && cols === MINESWEEPER_PRESETS.expert.cols && mines === MINESWEEPER_PRESETS.expert.mines) {
+    return 'expert';
+  }
+
+  return 'custom';
+}
+
+function getMinesweeperFace(status: GameStatus, isPressed = false) {
+  if (isPressed && status !== 'won' && status !== 'lost') {
+    return '😮';
+  }
+
+  if (status === 'won') {
+    return '😎';
+  }
+
+  if (status === 'lost') {
+    return '😵';
+  }
+
+  return '🙂';
+}
+
+function formatElapsedTime(state: MinesweeperState) {
+  const runningMs = state.status === 'playing' && state.startedAt
+    ? state.elapsedMs + (Date.now() - state.startedAt)
+    : state.elapsedMs;
+  const totalSeconds = Math.max(0, Math.floor(runningMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+  const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+  return `${minutes}:${seconds}`;
+}
+
+function countFlags(board: MinesweeperCell[][]) {
+  let count = 0;
+  for (const row of board) {
+    for (const cell of row) {
+      if (cell.flagged) {
+        count += 1;
+      }
+    }
+  }
+  return count;
+}
+
+function renderMinesweeperBoard(state: MinesweeperState) {
+  const cells: string[] = [];
+
+  for (let row = 0; row < state.rows; row += 1) {
+    for (let col = 0; col < state.cols; col += 1) {
+      const cell = state.board[row][col];
+      const revealed = cell.revealed || (state.status === 'lost' && cell.hasMine);
+      let label = '';
+
+      if (revealed && cell.hasMine) {
+        label = '*';
+      } else if (cell.flagged && !revealed) {
+        label = '⚑';
+      } else if (revealed && cell.adjacentMines > 0) {
+        label = String(cell.adjacentMines);
+      }
+
+      const classes = [
+        'mine-cell',
+        revealed ? 'is-revealed' : 'is-hidden',
+        cell.flagged ? 'is-flagged' : '',
+        revealed && cell.hasMine ? 'is-mine' : '',
+        revealed && cell.adjacentMines > 0 ? `mine-count-${cell.adjacentMines}` : ''
+      ].filter(Boolean).join(' ');
+
+      cells.push(`<button class="${classes}" type="button" data-mine-row="${row}" data-mine-col="${col}" aria-label="Cell ${row + 1},${col + 1}">${label}</button>`);
+    }
+  }
+
+  return cells.join('');
+}
+
+function cloneMinesweeperState(state: MinesweeperState): MinesweeperState {
+  return {
+    ...state,
+    board: state.board.map((row) => row.map((cell) => ({ ...cell })))
+  };
+}
+
+function revealMinesweeperCell(state: MinesweeperState, row: number, col: number): MinesweeperState {
+  const next = cloneMinesweeperState(state);
+  const cell = next.board[row]?.[col];
+
+  if (!cell || cell.flagged || cell.revealed || next.status === 'won' || next.status === 'lost') {
+    return next;
+  }
+
+  if (next.status === 'ready') {
+    ensureSafeFirstClick(next, row, col);
+    next.status = 'playing';
+    next.startedAt = Date.now();
+  }
+
+  if (cell.hasMine) {
+    cell.revealed = true;
+    next.status = 'lost';
+    if (next.startedAt) {
+      next.elapsedMs += Date.now() - next.startedAt;
+      next.startedAt = null;
+    }
+    next.finishedAt = Date.now();
+    return next;
+  }
+
+  const queue: Array<[number, number]> = [[row, col]];
+  while (queue.length > 0) {
+    const [currentRow, currentCol] = queue.shift() as [number, number];
+    const current = next.board[currentRow][currentCol];
+
+    if (current.revealed || current.flagged) {
+      continue;
+    }
+
+    current.revealed = true;
+    next.safeCellsRevealed += 1;
+
+    if (current.adjacentMines === 0) {
+      for (const [neighborRow, neighborCol] of getNeighbors(currentRow, currentCol, next.rows, next.cols)) {
+        const neighbor = next.board[neighborRow][neighborCol];
+        if (!neighbor.revealed && !neighbor.hasMine) {
+          queue.push([neighborRow, neighborCol]);
+        }
+      }
+    }
+  }
+
+  if (next.safeCellsRevealed >= next.rows * next.cols - next.mines) {
+    next.status = 'won';
+    if (next.startedAt) {
+      next.elapsedMs += Date.now() - next.startedAt;
+      next.startedAt = null;
+    }
+    next.finishedAt = Date.now();
+  }
+
+  return next;
+}
+
+function toggleMinesweeperFlag(state: MinesweeperState, row: number, col: number): MinesweeperState {
+  const next = cloneMinesweeperState(state);
+  const cell = next.board[row]?.[col];
+
+  if (!cell || cell.revealed || next.status === 'won' || next.status === 'lost') {
+    return next;
+  }
+
+  cell.flagged = !cell.flagged;
+  return next;
+}
+
+function chordReveal(state: MinesweeperState, row: number, col: number): MinesweeperState {
+  const cell = state.board[row]?.[col];
+  if (!cell || !cell.revealed || cell.adjacentMines <= 0 || state.status === 'won' || state.status === 'lost') {
+    return state;
+  }
+
+  const neighbors = getNeighbors(row, col, state.rows, state.cols);
+  const flaggedCount = neighbors.filter(([neighborRow, neighborCol]) => state.board[neighborRow][neighborCol].flagged).length;
+
+  if (flaggedCount !== cell.adjacentMines) {
+    return state;
+  }
+
+  let next = state;
+  for (const [neighborRow, neighborCol] of neighbors) {
+    const neighbor = next.board[neighborRow][neighborCol];
+    if (!neighbor.flagged && !neighbor.revealed) {
+      next = revealMinesweeperCell(next, neighborRow, neighborCol);
+      if (next.status === 'lost') {
+        break;
+      }
+    }
+  }
+
+  return next;
+}
+
+function saveMinesweeperState(state: MinesweeperState) {
+  window.localStorage.setItem(MINESWEEPER_STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadMinesweeperState() {
+  const raw = window.localStorage.getItem(MINESWEEPER_STORAGE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as MinesweeperState;
+    if (!Array.isArray(parsed.board) || typeof parsed.rows !== 'number' || typeof parsed.cols !== 'number' || typeof parsed.mines !== 'number') {
+      return null;
+    }
+
+    const safeRows = Math.floor(parsed.rows);
+    const safeCols = Math.floor(parsed.cols);
+    const safeMines = Math.floor(parsed.mines);
+
+    if (safeRows <= 0 || safeCols <= 0 || safeMines <= 0) {
+      return null;
+    }
+
+    if (parsed.board.length !== safeRows || parsed.board.some((row) => row.length !== safeCols)) {
+      return null;
+    }
+
+    const maxMines = safeRows * safeCols - 1;
+    if (safeMines > maxMines) {
+      return null;
+    }
+
+    const safeRevealed = parsed.board.flat().filter((cell) => cell.revealed && !cell.hasMine).length;
+
+    return {
+      ...parsed,
+      difficulty: parsed.difficulty ?? inferDifficulty(safeRows, safeCols, safeMines),
+      rows: safeRows,
+      cols: safeCols,
+      mines: safeMines,
+      safeCellsRevealed: safeRevealed
+    };
+  } catch {
+    return null;
+  }
+}
+
+function initializeMinesweeperPage() {
+  const board = document.querySelector<HTMLDivElement>('#minesweeper-board');
+  const faceButton = document.querySelector<HTMLButtonElement>('#minesweeper-new');
+  const resetButton = document.querySelector<HTMLButtonElement>('#minesweeper-reset-save');
+  const applySettingsButton = document.querySelector<HTMLButtonElement>('#minesweeper-apply-settings');
+  const difficultyInputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="minesweeper-difficulty"]'));
+  const customRowsInput = document.querySelector<HTMLInputElement>('#custom-rows');
+  const customColsInput = document.querySelector<HTMLInputElement>('#custom-cols');
+  const customMinesInput = document.querySelector<HTMLInputElement>('#custom-mines');
+  const mineCounter = document.querySelector<HTMLDivElement>('#minesweeper-mine-counter');
+  const status = document.querySelector<HTMLSpanElement>('#minesweeper-status-text');
+  const timer = document.querySelector<HTMLDivElement>('#minesweeper-timer');
+
+  if (!board || !faceButton || !resetButton || !applySettingsButton || !customRowsInput || !customColsInput || !customMinesInput || !mineCounter || !status || !timer) {
+    return;
+  }
+
+  let state = loadMinesweeperState() ?? createMinesweeperState('beginner', MINESWEEPER_PRESETS.beginner.rows, MINESWEEPER_PRESETS.beginner.cols, MINESWEEPER_PRESETS.beginner.mines);
+  let chordPreviewCells: HTMLButtonElement[] = [];
+
+  const syncFace = (isPressed = false) => {
+    faceButton.textContent = getMinesweeperFace(state.status, isPressed);
+    faceButton.classList.toggle('is-pressed', isPressed);
+  };
+
+  const syncDifficultyInputs = () => {
+    difficultyInputs.forEach((input) => {
+      input.checked = input.value === state.difficulty;
+    });
+
+    customRowsInput.value = String(state.rows);
+    customColsInput.value = String(state.cols);
+    customMinesInput.value = String(state.mines);
+
+    const customActive = state.difficulty === 'custom';
+    customRowsInput.disabled = !customActive;
+    customColsInput.disabled = !customActive;
+    customMinesInput.disabled = !customActive;
+  };
+
+  const updateCustomMinesLimit = () => {
+    const rows = Number(customRowsInput.value);
+    const cols = Number(customColsInput.value);
+
+    if (!Number.isFinite(rows) || !Number.isFinite(cols)) {
+      customMinesInput.max = '668';
+      return;
+    }
+
+    const maxMines = Math.max(10, Math.floor(rows) * Math.floor(cols) - 1);
+    customMinesInput.max = String(maxMines);
+  };
+
+  const validateCustomInputs = (showTooltip = false) => {
+    updateCustomMinesLimit();
+
+    const maxMines = Number(customMinesInput.max);
+    const checks: Array<{ input: HTMLInputElement; label: string; min: number; max: number }> = [
+      { input: customRowsInput, label: 'Rows', min: 9, max: 24 },
+      { input: customColsInput, label: 'Cols', min: 9, max: 30 },
+      { input: customMinesInput, label: 'Mines', min: 10, max: Number.isFinite(maxMines) ? maxMines : 668 }
+    ];
+
+    let isValid = true;
+    for (const check of checks) {
+      const numericValue = Number(check.input.value);
+
+      if (!Number.isFinite(numericValue)) {
+        check.input.setCustomValidity(`${check.label} must be a number.`);
+        isValid = false;
+      } else if (Math.floor(numericValue) < check.min) {
+        check.input.setCustomValidity(`${check.label} must be at least ${check.min}.`);
+        isValid = false;
+      } else if (Math.floor(numericValue) > check.max) {
+        check.input.setCustomValidity(`${check.label} must be no more than ${check.max}.`);
+        isValid = false;
+      } else {
+        check.input.setCustomValidity('');
+      }
+    }
+
+    if (showTooltip && !isValid) {
+      const firstInvalid = checks.find((check) => !check.input.checkValidity());
+      firstInvalid?.input.reportValidity();
+    }
+
+    return isValid;
+  };
+
+  const updateView = () => {
+    chordPreviewCells = [];
+    board.innerHTML = renderMinesweeperBoard(state);
+    board.style.gridTemplateColumns = `repeat(${state.cols}, minmax(0, 1fr))`;
+    status.textContent = buildMinesweeperStatusText(state);
+    timer.textContent = formatClassicCounter(getElapsedSeconds(state));
+    mineCounter.textContent = formatClassicCounter(state.mines - countFlags(state.board));
+    syncFace();
+    syncDifficultyInputs();
+
+    saveMinesweeperState(state);
+  };
+
+  const clearChordPreview = () => {
+    for (const cell of chordPreviewCells) {
+      cell.classList.remove('is-chord-preview');
+    }
+    chordPreviewCells = [];
+  };
+
+  const showChordPreview = (row: number, col: number) => {
+    clearChordPreview();
+
+    const source = state.board[row]?.[col];
+    if (!source || !source.revealed || source.adjacentMines <= 0 || state.status === 'won' || state.status === 'lost') {
+      return;
+    }
+
+    for (const [nextRow, nextCol] of getNeighbors(row, col, state.rows, state.cols)) {
+      const neighbor = state.board[nextRow][nextCol];
+      if (neighbor.revealed || neighbor.flagged) {
+        continue;
+      }
+
+      const button = board.querySelector<HTMLButtonElement>(`button[data-mine-row="${nextRow}"][data-mine-col="${nextCol}"]`);
+      if (!button) {
+        continue;
+      }
+
+      button.classList.add('is-chord-preview');
+      chordPreviewCells.push(button);
+    }
+  };
+
+  const setFreshGame = () => {
+    if (state.difficulty === 'custom' && !validateCustomInputs(true)) {
+      return;
+    }
+
+    const config = getDifficultyConfig(state.difficulty, {
+      rows: Number(customRowsInput.value),
+      cols: Number(customColsInput.value),
+      mines: Number(customMinesInput.value)
+    });
+    state = createMinesweeperState(state.difficulty, config.rows, config.cols, config.mines);
+    updateView();
+  };
+
+  const applySelectedDifficulty = () => {
+    const selected = difficultyInputs.find((input) => input.checked)?.value as MinesweeperDifficulty | undefined;
+    const nextDifficulty: MinesweeperDifficulty = selected ?? 'beginner';
+
+    if (nextDifficulty === 'custom' && !validateCustomInputs(true)) {
+      return;
+    }
+
+    const config = getDifficultyConfig(nextDifficulty, {
+      rows: Number(customRowsInput.value),
+      cols: Number(customColsInput.value),
+      mines: Number(customMinesInput.value)
+    });
+    state = createMinesweeperState(nextDifficulty, config.rows, config.cols, config.mines);
+    updateView();
+  };
+
+  const onBoardClick = (event: MouseEvent) => {
+    const target = event.target;
+    if (!(target instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    const row = Number(target.dataset.mineRow);
+    const col = Number(target.dataset.mineCol);
+    if (!Number.isFinite(row) || !Number.isFinite(col)) {
+      return;
+    }
+
+    const selectedCell = state.board[row]?.[col];
+    if (selectedCell?.revealed) {
+      state = chordReveal(state, row, col);
+    } else {
+      state = revealMinesweeperCell(state, row, col);
+    }
+
+    clearChordPreview();
+    updateView();
+  };
+
+  const onBoardContextMenu = (event: MouseEvent) => {
+    event.preventDefault();
+    const target = event.target;
+    if (!(target instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    const row = Number(target.dataset.mineRow);
+    const col = Number(target.dataset.mineCol);
+    if (!Number.isFinite(row) || !Number.isFinite(col)) {
+      return;
+    }
+
+    state = toggleMinesweeperFlag(state, row, col);
+    updateView();
+  };
+
+  board.addEventListener('click', onBoardClick);
+  board.addEventListener('contextmenu', onBoardContextMenu);
+  faceButton.addEventListener('click', setFreshGame);
+  applySettingsButton.addEventListener('click', applySelectedDifficulty);
+
+  const onCustomInputBlur = (event: FocusEvent) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    validateCustomInputs(true);
+  };
+
+  const onCustomInputChange = () => {
+    validateCustomInputs(false);
+  };
+
+  customRowsInput.addEventListener('input', onCustomInputChange);
+  customColsInput.addEventListener('input', onCustomInputChange);
+  customMinesInput.addEventListener('input', onCustomInputChange);
+  customRowsInput.addEventListener('blur', onCustomInputBlur);
+  customColsInput.addEventListener('blur', onCustomInputBlur);
+  customMinesInput.addEventListener('blur', onCustomInputBlur);
+
+  difficultyInputs.forEach((input) => {
+    input.addEventListener('change', () => {
+      const selected = input.value as MinesweeperDifficulty;
+      if (selected !== 'custom') {
+        const config = getDifficultyConfig(selected);
+        customRowsInput.value = String(config.rows);
+        customColsInput.value = String(config.cols);
+        customMinesInput.value = String(config.mines);
+      }
+
+      updateCustomMinesLimit();
+
+      if (state.status === 'ready') {
+        applySelectedDifficulty();
+        return;
+      }
+
+      state = {
+        ...state,
+        difficulty: selected
+      };
+      updateView();
+    });
+  });
+
+  const onBoardMouseDown = (event: MouseEvent) => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    const target = event.target;
+    if (!(target instanceof HTMLButtonElement)) {
+      syncFace(true);
+      return;
+    }
+
+    const row = Number(target.dataset.mineRow);
+    const col = Number(target.dataset.mineCol);
+    if (!Number.isFinite(row) || !Number.isFinite(col)) {
+      syncFace(true);
+      return;
+    }
+
+    showChordPreview(row, col);
+    syncFace(true);
+  };
+  const onBoardMouseUp = () => {
+    clearChordPreview();
+    syncFace();
+  };
+  const onBoardMouseLeave = () => {
+    clearChordPreview();
+    syncFace();
+  };
+
+  const onFaceMouseDown = () => {
+    syncFace(true);
+  };
+
+  const onFaceMouseUp = () => {
+    syncFace();
+  };
+
+  const onFaceMouseLeave = () => {
+    syncFace();
+  };
+
+  board.addEventListener('mousedown', onBoardMouseDown);
+  board.addEventListener('mouseup', onBoardMouseUp);
+  board.addEventListener('mouseleave', onBoardMouseLeave);
+  faceButton.addEventListener('mousedown', onFaceMouseDown);
+  faceButton.addEventListener('mouseup', onFaceMouseUp);
+  faceButton.addEventListener('mouseleave', onFaceMouseLeave);
+
+  resetButton.addEventListener('click', () => {
+    window.localStorage.removeItem(MINESWEEPER_STORAGE_KEY);
+    state = createMinesweeperState('beginner', MINESWEEPER_PRESETS.beginner.rows, MINESWEEPER_PRESETS.beginner.cols, MINESWEEPER_PRESETS.beginner.mines);
+    updateView();
+  });
+
+  const intervalId = window.setInterval(() => {
+    if (state.status === 'playing') {
+      timer.textContent = formatClassicCounter(getElapsedSeconds(state));
+    }
+  }, 1000);
+
+  cleanupMinesweeperTicker = () => {
+    clearChordPreview();
+    board.removeEventListener('click', onBoardClick);
+    board.removeEventListener('contextmenu', onBoardContextMenu);
+    board.removeEventListener('mousedown', onBoardMouseDown);
+    board.removeEventListener('mouseup', onBoardMouseUp);
+    board.removeEventListener('mouseleave', onBoardMouseLeave);
+    faceButton.removeEventListener('mousedown', onFaceMouseDown);
+    faceButton.removeEventListener('mouseup', onFaceMouseUp);
+    faceButton.removeEventListener('mouseleave', onFaceMouseLeave);
+    customRowsInput.removeEventListener('input', onCustomInputChange);
+    customColsInput.removeEventListener('input', onCustomInputChange);
+    customMinesInput.removeEventListener('input', onCustomInputChange);
+    customRowsInput.removeEventListener('blur', onCustomInputBlur);
+    customColsInput.removeEventListener('blur', onCustomInputBlur);
+    customMinesInput.removeEventListener('blur', onCustomInputBlur);
+    window.clearInterval(intervalId);
+  };
+
+  updateCustomMinesLimit();
+  validateCustomInputs(false);
+  updateView();
+}
+
 function setTheme(theme: 'light' | 'dark') {
   document.body.dataset.theme = theme;
   window.localStorage.setItem('theme', theme);
   applyVisualizerTheme(theme);
 
   if (themeToggle) {
-    themeToggle.textContent = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+    themeToggle.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
   }
 }
 
@@ -419,6 +1387,15 @@ function initializeVisualizerControls() {
     expandedLabel: string,
     collapsedLabel: string
   ) => {
+    if (isReducedMotionPreferred()) {
+      target.classList.toggle('is-open', expanded);
+      target.classList.toggle('is-collapsed', !expanded);
+      target.style.maxHeight = expanded ? 'none' : '0px';
+      target.style.opacity = expanded ? '1' : '0';
+      setToggleLabel(button, expanded, expandedLabel, collapsedLabel);
+      return;
+    }
+
     if (expanded) {
       target.classList.remove('is-collapsed');
       target.classList.add('is-open');
@@ -576,6 +1553,31 @@ function initializeVisualizerControls() {
     scheduleAutoRebuild();
   };
 
+  const onGlobalShortcut = (event: KeyboardEvent) => {
+    if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isTypingTarget(event.target)) {
+      return;
+    }
+
+    const key = event.key.toLowerCase();
+
+    if (key === 't') {
+      event.preventDefault();
+      setTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
+      return;
+    }
+
+    if (key === 'd') {
+      event.preventDefault();
+      toggleDataButton.click();
+      return;
+    }
+
+    if (key === 'l') {
+      event.preventDefault();
+      toggleLegendButton.click();
+    }
+  };
+
   rebuildButton.addEventListener('click', () => {
     rebuild('manual');
   });
@@ -620,6 +1622,12 @@ function initializeVisualizerControls() {
   collarInput.addEventListener('input', onEditorInput);
   surveyInput.addEventListener('input', onEditorInput);
   assayInput.addEventListener('input', onEditorInput);
+
+  cleanupVisualizerShortcuts?.();
+  document.addEventListener('keydown', onGlobalShortcut);
+  cleanupVisualizerShortcuts = () => {
+    document.removeEventListener('keydown', onGlobalShortcut);
+  };
 }
 
 function renderLegend(models: HoleModel[]) {
@@ -658,8 +1666,9 @@ function createDrillholeScene(models: HoleModel[]) {
   };
 
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.06;
+  const reducedMotion = isReducedMotionPreferred();
+  controls.enableDamping = !reducedMotion;
+  controls.dampingFactor = reducedMotion ? 0 : 0.06;
   controls.target.set(0, 0, 0);
 
   const ambient = new THREE.AmbientLight(0xffffff, 1.0);
@@ -725,19 +1734,33 @@ function createDrillholeScene(models: HoleModel[]) {
   observer.observe(mount);
 
   let frameId = 0;
+  const renderScene = () => {
+    renderer.render(scene, camera);
+  };
+
+  if (reducedMotion) {
+    controls.addEventListener('change', renderScene);
+    renderScene();
+  }
+
   const animate = () => {
     controls.update();
-    renderer.render(scene, camera);
+    renderScene();
     frameId = window.requestAnimationFrame(animate);
   };
 
-  animate();
+  if (!reducedMotion) {
+    animate();
+  }
 
   return () => {
     applyVisualizerTheme = () => {};
     observer.disconnect();
     if (frameId) {
       window.cancelAnimationFrame(frameId);
+    }
+    if (reducedMotion) {
+      controls.removeEventListener('change', renderScene);
     }
     controls.dispose();
     scene.traverse((object) => {
@@ -756,6 +1779,24 @@ function createDrillholeScene(models: HoleModel[]) {
     renderer.dispose();
     mount.innerHTML = '';
   };
+}
+
+function isReducedMotionPreferred() {
+  return prefersReducedMotion.matches;
+}
+
+function isTypingTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  return target instanceof HTMLInputElement
+    || target instanceof HTMLTextAreaElement
+    || target instanceof HTMLSelectElement;
 }
 
 function makeTextSprite(text: string) {
