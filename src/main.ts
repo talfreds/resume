@@ -110,6 +110,7 @@ const FEATURED_VISUALIZER_ORG = 'Imdex Limited';
 const GITHUB_PROFILE_URL = 'https://github.com/talfreds';
 const LIGHTHOUSE_PATH = '/lighthouse-results';
 const MINESWEEPER_PATH = '/minesweeper';
+const APP_BASE_PATH = normalizeBasePath(import.meta.env.BASE_URL);
 const MINESWEEPER_STORAGE_KEY = 'resume-minesweeper-v1';
 const MINESWEEPER_PRESETS: Record<Exclude<MinesweeperDifficulty, 'custom'>, { rows: number; cols: number; mines: number }> = {
   beginner: { rows: 9, cols: 9, mines: 10 },
@@ -240,6 +241,7 @@ const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matc
 const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : systemPrefersDark ? 'dark' : 'light';
 
 setTheme(initialTheme);
+restoreRouteFromRedirect();
 document.addEventListener('click', onRouteLinkClick);
 window.addEventListener('popstate', () => {
   renderCurrentRoute();
@@ -261,17 +263,18 @@ function onRouteLinkClick(event: MouseEvent) {
     return;
   }
 
-  const href = link.getAttribute('href');
-  if (!href || href.startsWith('http')) {
+  const routePath = link.dataset.routePath ?? link.getAttribute('href');
+  if (!routePath || routePath.startsWith('http')) {
     return;
   }
 
   event.preventDefault();
-  navigateTo(href);
+  navigateTo(routePath);
 }
 
 function navigateTo(path: string) {
-  const next = path.startsWith('/') ? path : `/${path}`;
+  const routePath = toRoutePath(path);
+  const next = toAppPath(routePath);
   if (window.location.pathname !== next) {
     window.history.pushState({}, '', next);
   }
@@ -279,19 +282,22 @@ function navigateTo(path: string) {
 }
 
 function resolveRoute(pathname: string): SiteRoute {
-  if (pathname === LIGHTHOUSE_PATH) {
+  const routePath = toRoutePath(pathname);
+
+  if (routePath === LIGHTHOUSE_PATH) {
     return 'lighthouse-results';
   }
 
-  if (pathname === MINESWEEPER_PATH) {
+  if (routePath === MINESWEEPER_PATH) {
     return 'minesweeper';
   }
 
   return 'resume';
 }
 
-function navLink(href: string, label: string, isActive: boolean) {
-  return `<a data-route-link="true" href="${href}" class="${isActive ? 'is-active' : ''}" aria-current="${isActive ? 'page' : 'false'}">${label}</a>`;
+function navLink(routePath: string, label: string, isActive: boolean) {
+  const href = toAppPath(routePath);
+  return `<a data-route-link="true" data-route-path="${routePath}" href="${href}" class="${isActive ? 'is-active' : ''}" aria-current="${isActive ? 'page' : 'false'}">${label}</a>`;
 }
 
 function renderShell(route: SiteRoute, content: string) {
@@ -479,6 +485,56 @@ function renderCurrentRoute() {
   if (route === 'minesweeper') {
     initializeMinesweeperPage();
   }
+}
+
+function normalizeBasePath(basePath: string) {
+  const path = basePath.trim();
+  if (!path || path === '/') {
+    return '/';
+  }
+
+  return `/${path.replace(/^\/+|\/+$/g, '')}`;
+}
+
+function toAppPath(routePath: string) {
+  const normalizedRoute = routePath === '/' ? '' : routePath.startsWith('/') ? routePath : `/${routePath}`;
+
+  if (APP_BASE_PATH === '/') {
+    return normalizedRoute || '/';
+  }
+
+  return `${APP_BASE_PATH}${normalizedRoute}${normalizedRoute ? '' : '/'}`;
+}
+
+function toRoutePath(pathname: string) {
+  const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+
+  if (APP_BASE_PATH === '/') {
+    return normalizedPath || '/';
+  }
+
+  if (normalizedPath === APP_BASE_PATH || normalizedPath === `${APP_BASE_PATH}/`) {
+    return '/';
+  }
+
+  if (normalizedPath.startsWith(`${APP_BASE_PATH}/`)) {
+    const strippedPath = normalizedPath.slice(APP_BASE_PATH.length);
+    return strippedPath || '/';
+  }
+
+  return normalizedPath;
+}
+
+function restoreRouteFromRedirect() {
+  const url = new URL(window.location.href);
+  const redirectedPath = url.searchParams.get('p');
+  if (!redirectedPath) {
+    return;
+  }
+
+  const restoredUrl = new URL(redirectedPath, window.location.origin);
+  const restoredPath = toAppPath(restoredUrl.pathname);
+  window.history.replaceState({}, '', `${restoredPath}${restoredUrl.search}${restoredUrl.hash}`);
 }
 
 function renderRole(role: ResumeEntry) {

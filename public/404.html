@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting...</title>
+    <script>
+      (function () {
+        var location = window.location;
+        var segments = location.pathname.split('/');
+        var repositoryBase = segments.length > 1 ? '/' + segments[1] : '';
+        var appBase = repositoryBase || '';
+        var routePath = location.pathname.slice(appBase.length) || '/';
+        var redirectTarget = appBase + '/?p=' + encodeURIComponent(routePath + location.search + location.hash);
+        location.replace(location.origin + redirectTarget);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
