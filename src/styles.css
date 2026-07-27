@@ -41,6 +41,7 @@ body {
     radial-gradient(circle at 90% 8%, rgba(207, 145, 61, 0.2), transparent 30%),
     var(--bg);
   color: var(--text);
+  overflow-x: hidden;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -79,7 +80,7 @@ button {
 }
 
 .page {
-  width: min(1120px, calc(100vw - 2rem));
+  width: min(1120px, calc(100% - 2rem));
   margin: 0 auto;
   padding: 2rem 0 4rem;
 }
@@ -447,6 +448,15 @@ button {
   display: grid;
   gap: 1rem;
   padding: 1rem 0;
+}
+
+.role h3,
+.role li,
+.job-header .meta,
+.project h4,
+.project-description,
+.project-meta strong {
+  overflow-wrap: anywhere;
 }
 
 .role-main {
@@ -944,7 +954,7 @@ li + li {
   }
 
   .page {
-    width: min(100vw - 1rem, 1120px);
+    width: min(calc(100% - 1rem), 1120px);
   }
 
   .page-links {
@@ -966,10 +976,134 @@ li + li {
   }
 }
 
+@media (max-width: 700px) {
+  .page {
+    padding: 1rem 0 2.5rem;
+  }
+
+  .hero,
+  .card {
+    border-radius: 18px;
+  }
+
+  .hero {
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+
+  .card {
+    padding: 1.1rem;
+  }
+
+  .hero-name {
+    font-size: 1.35rem;
+  }
+
+  .summary {
+    font-size: 1rem;
+  }
+
+  .visualizer-toolbar,
+  .editor-header,
+  .minesweeper-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .visualizer-stage {
+    min-height: 220px;
+  }
+
+  .lighthouse-intro,
+  .bundle-comparison,
+  .bundle-summary,
+  .technique-card,
+  .lighthouse-footnote,
+  .vital {
+    padding: 1rem;
+  }
+
+  .bundle-summary {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .score-card {
+    padding: 1.1rem 0.9rem;
+  }
+
+  .score-number {
+    font-size: 2rem;
+  }
+
+  .summary-value {
+    font-size: 1.45rem;
+  }
+
+  .minesweeper-classic-window,
+  .minesweeper-hud,
+  .minesweeper-board-frame,
+  .minesweeper-footer {
+    width: 100%;
+  }
+
+  .minesweeper-board {
+    overflow: auto;
+  }
+
+  .minesweeper-settings {
+    padding: 0.3rem;
+  }
+
+  .digit-display {
+    font-size: 1rem;
+  }
+
+  .mine-cell {
+    width: 1.35rem;
+    height: 1.35rem;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    width: calc(100% - 0.75rem);
+  }
+
+  .hero-name {
+    font-size: 1.2rem;
+  }
+
+  .page-links {
+    gap: 0.55rem;
+    font-size: 0.84rem;
+  }
+
+  .project-group-title {
+    font-size: 0.9rem;
+  }
+
+  .techniques-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lighthouse-scores {
+    gap: 0.8rem;
+  }
+
+  .mine-cell {
+    width: 1.22rem;
+    height: 1.22rem;
+    font-size: 0.75rem;
+  }
+
+  .difficulty-custom-field input {
+    width: 2.45rem;
+  }
+}
+
 /* Performance Optimization: Defer rendering of off-screen content */
-.role,
-.project,
-.project-group,
 .legend-item,
 .technique-card,
 .minesweeper-card {
@@ -1105,12 +1239,15 @@ li + li {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
   margin-bottom: 0.75rem;
 }
 
 .vital-label {
   font-weight: 600;
   color: var(--text);
+  min-width: 0;
 }
 
 .vital-rating {
@@ -1133,6 +1270,7 @@ li + li {
 .vital-values {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 

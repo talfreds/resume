@@ -30,9 +30,10 @@ export interface PerformanceData {
 
 export async function loadPerformanceData(): Promise<PerformanceData | null> {
   try {
+    const baseUrl = import.meta.env.BASE_URL;
     const [baseline, optimized] = await Promise.all([
-      fetch('/data/performance-baseline.json').then((r) => r.json()),
-      fetch('/data/performance-optimized.json').then((r) => r.json()),
+      fetch(`${baseUrl}data/performance-baseline.json`).then((r) => r.json()),
+      fetch(`${baseUrl}data/performance-optimized.json`).then((r) => r.json()),
     ]);
 
     return {
