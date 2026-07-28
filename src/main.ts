@@ -307,7 +307,6 @@ function renderResumePage() {
           <div class="section-header">
             <div>
               <div class="eyebrow">Projects</div>
-              <h2>Personal and academic work</h2>
             </div>
           </div>
           <div class="project-groups">
@@ -557,9 +556,8 @@ function renderImdexVisualizer() {
               </button>
             </div>
           </div>
-          <div class="visualizer-stage" id="visualizer" aria-label="Three dimensional drillhole visualizer"></div>
+          <div class="visualizer-stage" id="visualizer"></div>
           <div id="legend" class="legend-panel collapsible" aria-label="Interval labels">
-            <h5>Labels</h5>
             <div id="legend-items" class="legend legend-inline">
               ${buildLithologyLegend(holeModels).map(renderLegendItem).join('')}
             </div>
@@ -591,7 +589,7 @@ function renderImdexVisualizer() {
           </div>
           <p id="visualizer-status" class="visualizer-status" role="status" aria-live="polite">Loaded default sample data.</p>
           <div id="visualizer-errors" class="visualizer-errors" aria-live="polite" hidden>
-            <h5>Could not rebuild visualizer</h5>
+            <div style="font-weight: bold; margin-bottom: 0.5rem;">Could not rebuild visualizer</div>
             <ul id="visualizer-error-list"></ul>
           </div>
         </section>

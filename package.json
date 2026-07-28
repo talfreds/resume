@@ -26,6 +26,9 @@
   "devDependencies": {
     "@types/node": "^26.1.2",
     "@types/three": "^0.185.1",
+    "chrome-launcher": "^1.2.1",
+    "lighthouse": "^13.4.1",
+    "puppeteer": "^25.4.0",
     "terser": "^5.49.0",
     "typescript": "^5.9.2",
     "vite": "^8.1.5"

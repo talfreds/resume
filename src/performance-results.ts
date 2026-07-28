@@ -25,7 +25,6 @@ export function renderLighthouseResults(data: PerformanceData | null) {
         <div class="section-header">
           <div>
             <div class="eyebrow">Lighthouse Audit Results</div>
-            <h1>Performance Engineering</h1>
           </div>
         </div>
 
