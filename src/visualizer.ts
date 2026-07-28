@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 export type HolePathPoint = {
   depth: number;
@@ -43,9 +43,9 @@ export type DrillholeInputSet = {
   assayCsv: string;
 };
 
-let applyVisualizerTheme: (theme: 'light' | 'dark') => void = () => {};
+let applyVisualizerTheme: (theme: "light" | "dark") => void = () => {};
 
-export function setApplyVisualizerTheme(fn: (theme: 'light' | 'dark') => void) {
+export function setApplyVisualizerTheme(fn: (theme: "light" | "dark") => void) {
   applyVisualizerTheme = fn;
 }
 
@@ -54,27 +54,33 @@ export function getApplyVisualizerTheme() {
 }
 
 export function createDrillholeScene(models: HoleModel[]) {
-  const mount = document.querySelector<HTMLDivElement>('#visualizer');
+  const mount = document.querySelector<HTMLDivElement>("#visualizer");
 
   if (!mount || models.length === 0) {
     applyVisualizerTheme = () => {};
     return () => {};
   }
 
-  mount.innerHTML = '';
+  mount.innerHTML = "";
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, mount.clientWidth / mount.clientHeight, 0.1, 2000);
+  const camera = new THREE.PerspectiveCamera(
+    45,
+    mount.clientWidth / mount.clientHeight,
+    0.1,
+    2000,
+  );
   camera.position.set(75, 65, 95);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  const getVisualizerBackground = (theme: 'light' | 'dark') => theme === 'dark' ? '#111118' : '#e5ebf5';
-  const activeTheme = document.body.dataset.theme === 'dark' ? 'dark' : 'light';
+  const getVisualizerBackground = (theme: "light" | "dark") =>
+    theme === "dark" ? "#111118" : "#e5ebf5";
+  const activeTheme = document.body.dataset.theme === "dark" ? "dark" : "light";
   renderer.setClearColor(getVisualizerBackground(activeTheme), 1);
   mount.append(renderer.domElement);
 
-  applyVisualizerTheme = (theme: 'light' | 'dark') => {
+  applyVisualizerTheme = (theme: "light" | "dark") => {
     renderer.setClearColor(getVisualizerBackground(theme), 1);
   };
 
@@ -89,26 +95,44 @@ export function createDrillholeScene(models: HoleModel[]) {
   directional.position.set(90, 120, 60);
   scene.add(ambient, directional);
 
-  const allPoints = models.flatMap((model) => model.path.map((point) => point.position));
+  const allPoints = models.flatMap((model) =>
+    model.path.map((point) => point.position),
+  );
   const bounds = new THREE.Box3();
   allPoints.forEach((point) => bounds.expandByPoint(point));
   const size = bounds.getSize(new THREE.Vector3());
   const maxGridExtent = Math.max(size.x, size.z, 100);
 
-  const grid = new THREE.GridHelper(maxGridExtent * 1.6, 24, 0x3a3f52, 0x24283b);
+  const grid = new THREE.GridHelper(
+    maxGridExtent * 1.6,
+    24,
+    0x3a3f52,
+    0x24283b,
+  );
   grid.position.y = bounds.min.y - 2;
   scene.add(grid);
 
   for (const model of models) {
     const trajectoryPoints = model.path.map((point) => point.position);
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints(trajectoryPoints);
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xaab4d6, transparent: true, opacity: 0.8 });
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints(
+      trajectoryPoints,
+    );
+    const lineMaterial = new THREE.LineBasicMaterial({
+      color: 0xaab4d6,
+      transparent: true,
+      opacity: 0.8,
+    });
     const centerLine = new THREE.Line(lineGeometry, lineMaterial);
     scene.add(centerLine);
 
     const collarMarker = new THREE.Mesh(
       new THREE.SphereGeometry(1.4, 18, 12),
-      new THREE.MeshStandardMaterial({ color: 0xd5ddff, emissive: 0x131629, metalness: 0.1, roughness: 0.5 })
+      new THREE.MeshStandardMaterial({
+        color: 0xd5ddff,
+        emissive: 0x131629,
+        metalness: 0.1,
+        roughness: 0.5,
+      }),
     );
     collarMarker.position.copy(trajectoryPoints[0]);
     scene.add(collarMarker);
@@ -129,7 +153,12 @@ export function createDrillholeScene(models: HoleModel[]) {
       const radius = 0.8 + interval.cu_pct * 0.35;
 
       for (let i = 0; i < pathSegment.length - 1; i += 1) {
-        const segment = makeCylinderBetween(pathSegment[i], pathSegment[i + 1], radius, interval.color_hex);
+        const segment = makeCylinderBetween(
+          pathSegment[i],
+          pathSegment[i + 1],
+          radius,
+          interval.color_hex,
+        );
         scene.add(segment);
       }
     }
@@ -152,7 +181,7 @@ export function createDrillholeScene(models: HoleModel[]) {
   };
 
   if (reducedMotion) {
-    controls.addEventListener('change', renderScene);
+    controls.addEventListener("change", renderScene);
     renderScene();
   }
 
@@ -173,7 +202,7 @@ export function createDrillholeScene(models: HoleModel[]) {
       window.cancelAnimationFrame(frameId);
     }
     if (reducedMotion) {
-      controls.removeEventListener('change', renderScene);
+      controls.removeEventListener("change", renderScene);
     }
     controls.dispose();
     scene.traverse((object) => {
@@ -190,61 +219,86 @@ export function createDrillholeScene(models: HoleModel[]) {
       }
     });
     renderer.dispose();
-    mount.innerHTML = '';
+    mount.innerHTML = "";
   };
 }
 
 export function makeTextSprite(text: string) {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = 256;
   canvas.height = 96;
-  const context = canvas.getContext('2d');
+  const context = canvas.getContext("2d");
 
   if (!context) {
-    throw new Error('Unable to create canvas context for label sprite.');
+    throw new Error("Unable to create canvas context for label sprite.");
   }
 
-  context.fillStyle = 'rgba(17,17,24,0.85)';
+  context.fillStyle = "rgba(17,17,24,0.85)";
   context.fillRect(0, 0, canvas.width, canvas.height);
-  context.strokeStyle = '#7ea7ff';
+  context.strokeStyle = "#7ea7ff";
   context.lineWidth = 4;
   context.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
-  context.fillStyle = '#f3f7ff';
-  context.font = 'bold 34px Inter, sans-serif';
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
+  context.fillStyle = "#f3f7ff";
+  context.font = "bold 34px Inter, sans-serif";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
   context.fillText(text, canvas.width / 2, canvas.height / 2);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
-  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+  });
   const sprite = new THREE.Sprite(material);
   sprite.scale.set(13, 4.8, 1);
   return sprite;
 }
 
-function makeCylinderBetween(start: THREE.Vector3, end: THREE.Vector3, radius: number, colorHex: string) {
+function makeCylinderBetween(
+  start: THREE.Vector3,
+  end: THREE.Vector3,
+  radius: number,
+  colorHex: string,
+) {
   const direction = new THREE.Vector3().subVectors(end, start);
   const length = direction.length();
 
-  const geometry = new THREE.CylinderGeometry(radius, radius, length, 16, 1, false);
+  const geometry = new THREE.CylinderGeometry(
+    radius,
+    radius,
+    length,
+    16,
+    1,
+    false,
+  );
   const color = new THREE.Color(colorHex);
   const material = new THREE.MeshStandardMaterial({
     color,
     emissive: color.clone().multiplyScalar(0.14),
     metalness: 0.08,
-    roughness: 0.42
+    roughness: 0.42,
   });
 
   const segment = new THREE.Mesh(geometry, material);
-  const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+  const midpoint = new THREE.Vector3()
+    .addVectors(start, end)
+    .multiplyScalar(0.5);
   segment.position.copy(midpoint);
-  segment.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+  segment.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    direction.normalize(),
+  );
 
   return segment;
 }
 
-function samplePathSegment(path: HolePathPoint[], fromDepth: number, toDepth: number, step = 4) {
+function samplePathSegment(
+  path: HolePathPoint[],
+  fromDepth: number,
+  toDepth: number,
+  step = 4,
+) {
   const points: THREE.Vector3[] = [];
 
   let depth = fromDepth;
@@ -258,7 +312,10 @@ function samplePathSegment(path: HolePathPoint[], fromDepth: number, toDepth: nu
   }
 
   if (points.length < 2) {
-    points.push(interpolatePathPoint(path, fromDepth), interpolatePathPoint(path, toDepth));
+    points.push(
+      interpolatePathPoint(path, fromDepth),
+      interpolatePathPoint(path, toDepth),
+    );
   }
 
   return points;
@@ -300,15 +357,23 @@ export function buildHoleModels(inputs: DrillholeInputSet): HoleModel[] {
   const models: HoleModel[] = [];
 
   for (const collar of collars) {
-    const holeSurvey = (surveyByHole.get(collar.hole_id) ?? []).slice().sort((a, b) => a.depth - b.depth);
-    const holeAssays = (assayByHole.get(collar.hole_id) ?? []).slice().sort((a, b) => a.from_depth - b.from_depth);
+    const holeSurvey = (surveyByHole.get(collar.hole_id) ?? [])
+      .slice()
+      .sort((a, b) => a.depth - b.depth);
+    const holeAssays = (assayByHole.get(collar.hole_id) ?? [])
+      .slice()
+      .sort((a, b) => a.from_depth - b.from_depth);
 
     if (holeSurvey.length === 0 || holeAssays.length === 0) {
       continue;
     }
 
     const collarPosition = mapCollarToThree(collar, center);
-    const path = buildTrajectory(collarPosition, holeSurvey, collar.total_depth);
+    const path = buildTrajectory(
+      collarPosition,
+      holeSurvey,
+      collar.total_depth,
+    );
 
     if (path.length < 2) {
       continue;
@@ -318,14 +383,18 @@ export function buildHoleModels(inputs: DrillholeInputSet): HoleModel[] {
       holeId: collar.hole_id,
       collar,
       path,
-      assays: holeAssays
+      assays: holeAssays,
     });
   }
 
   return models;
 }
 
-function buildTrajectory(collar: THREE.Vector3, surveyRows: SurveyRow[], totalDepth: number) {
+function buildTrajectory(
+  collar: THREE.Vector3,
+  surveyRows: SurveyRow[],
+  totalDepth: number,
+) {
   const stations = normalizeSurveyRows(surveyRows, totalDepth);
   const points: HolePathPoint[] = [{ depth: 0, position: collar.clone() }];
 
@@ -374,7 +443,11 @@ function normalizeSurveyRows(rows: SurveyRow[], totalDepth: number) {
   return normalized;
 }
 
-function surveyStep(distance: number, azimuthDegrees: number, dipDegrees: number) {
+function surveyStep(
+  distance: number,
+  azimuthDegrees: number,
+  dipDegrees: number,
+) {
   const azimuth = THREE.MathUtils.degToRad(azimuthDegrees);
   const dip = THREE.MathUtils.degToRad(dipDegrees);
 
@@ -386,18 +459,21 @@ function surveyStep(distance: number, azimuthDegrees: number, dipDegrees: number
 }
 
 function interpolateAngle(start: number, end: number, factor: number) {
-  let delta = (end - start + 540) % 360 - 180;
+  let delta = ((end - start + 540) % 360) - 180;
   if (delta < -180) {
     delta += 360;
   }
   return start + delta * factor;
 }
 
-function mapCollarToThree(collar: CollarRow, center: { x: number; y: number; z: number }) {
+function mapCollarToThree(
+  collar: CollarRow,
+  center: { x: number; y: number; z: number },
+) {
   return new THREE.Vector3(
     collar.x - center.x,
     collar.z - center.z,
-    -(collar.y - center.y)
+    -(collar.y - center.y),
   );
 }
 
@@ -409,12 +485,15 @@ function computeCollarCenter(collars: CollarRow[]) {
   return {
     x: (Math.min(...xValues) + Math.max(...xValues)) / 2,
     y: (Math.min(...yValues) + Math.max(...yValues)) / 2,
-    z: (Math.min(...zValues) + Math.max(...zValues)) / 2
+    z: (Math.min(...zValues) + Math.max(...zValues)) / 2,
   };
 }
 
 export function buildLithologyLegend(models: HoleModel[]) {
-  const map = new Map<string, { lithology: string; color: string; maxCu: number; intervalCount: number }>();
+  const map = new Map<
+    string,
+    { lithology: string; color: string; maxCu: number; intervalCount: number }
+  >();
 
   for (const model of models) {
     for (const assay of model.assays) {
@@ -427,7 +506,7 @@ export function buildLithologyLegend(models: HoleModel[]) {
           lithology: assay.lithology,
           color: assay.color_hex,
           maxCu: assay.cu_pct,
-          intervalCount: 1
+          intervalCount: 1,
         });
       }
     }
@@ -442,7 +521,7 @@ function parseCollars(csv: string): CollarRow[] {
     x: parseNumber(row.x),
     y: parseNumber(row.y),
     z: parseNumber(row.z),
-    total_depth: parseNumber(row.total_depth)
+    total_depth: parseNumber(row.total_depth),
   }));
 }
 
@@ -451,7 +530,7 @@ function parseSurveyRows(csv: string): SurveyRow[] {
     hole_id: row.hole_id,
     depth: parseNumber(row.depth),
     azimuth: parseNumber(row.azimuth),
-    dip: parseNumber(row.dip)
+    dip: parseNumber(row.dip),
   }));
 }
 
@@ -462,24 +541,24 @@ function parseAssayRows(csv: string): AssayRow[] {
     to_depth: parseNumber(row.to_depth),
     lithology: row.lithology,
     cu_pct: parseNumber(row.cu_pct),
-    color_hex: row.color_hex
+    color_hex: row.color_hex,
   }));
 }
 
 function parseCSV(csv: string) {
   if (!csv.trim()) {
-    throw new Error('CSV input cannot be empty.');
+    throw new Error("CSV input cannot be empty.");
   }
 
   const lines = csv.trim().split(/\r?\n/);
-  const header = lines[0].split(',').map((cell) => cell.trim());
+  const header = lines[0].split(",").map((cell) => cell.trim());
 
   return lines.slice(1).map((line) => {
-    const values = line.split(',').map((cell) => cell.trim());
+    const values = line.split(",").map((cell) => cell.trim());
     const row: Record<string, string> = {};
 
     header.forEach((key, index) => {
-      row[key] = values[index] ?? '';
+      row[key] = values[index] ?? "";
     });
 
     return row;
@@ -518,5 +597,5 @@ function lerp(start: number, end: number, factor: number) {
 }
 
 function isReducedMotionPreferred() {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }

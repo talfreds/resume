@@ -43,11 +43,3 @@ The GitHub Actions workflow lives at `.github/workflows/deploy.yml`.
 ## Deep-Link Refresh Routing
 
 Because this is a client-side app deployed on GitHub Pages, deep-link refreshes are handled through [public/404.html](public/404.html), which redirects unmatched paths back to the app entry route.
-
-## Performance Documentation
-
-Supporting docs for performance hardening and Lighthouse result presentation are in:
-
-- [PERFORMANCE_PLAN.md](PERFORMANCE_PLAN.md)
-- [PERFORMANCE_IMPLEMENTATION.md](PERFORMANCE_IMPLEMENTATION.md)
-- [LIGHTHOUSE_RESULTS_FEATURE.md](LIGHTHOUSE_RESULTS_FEATURE.md)

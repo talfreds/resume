@@ -1,8 +1,14 @@
-import './styles.css';
-import { ensureVisualizerLoaded, createScene, loadAndBuildHoleModels } from './visualizer-loader';
-import { loadPerformanceData } from './performance-data';
-import { renderLighthouseResults } from './performance-results';
-import type { HoleModel, HolePathPoint, CollarRow, SurveyRow, AssayRow, DrillholeInputSet } from './visualizer';
+import "./styles.css";
+import { createScene, loadAndBuildHoleModels } from "./visualizer-loader";
+import { loadPerformanceData } from "./performance-data";
+import { renderLighthouseResults } from "./performance-results";
+import type {
+  HoleModel,
+  CollarRow,
+  SurveyRow,
+  AssayRow,
+  DrillholeInputSet,
+} from "./visualizer";
 
 type ResumeEntry = {
   title: string;
@@ -18,11 +24,11 @@ type ProjectEntry = {
   description: string;
 };
 
-type SiteRoute = 'resume' | 'lighthouse-results' | 'minesweeper';
+type SiteRoute = "resume" | "lighthouse-results" | "minesweeper";
 
-type GameStatus = 'ready' | 'playing' | 'won' | 'lost';
+type GameStatus = "ready" | "playing" | "won" | "lost";
 
-type MinesweeperDifficulty = 'beginner' | 'intermediate' | 'expert' | 'custom';
+type MinesweeperDifficulty = "beginner" | "intermediate" | "expert" | "custom";
 
 type MinesweeperCell = {
   hasMine: boolean;
@@ -66,145 +72,164 @@ DH002,15.0,70.0,Schist,0.22,#708090
 DH002,70.0,140.0,Copper_Porphyry,2.10,#FF4500
 DH002,140.0,180.0,Granite,0.12,#CCCCCC`;
 
-const FEATURED_VISUALIZER_ORG = 'Imdex Limited';
-const GITHUB_PROFILE_URL = 'https://github.com/talfreds';
-const LIGHTHOUSE_PATH = '/lighthouse-results';
-const MINESWEEPER_PATH = '/minesweeper';
+const FEATURED_VISUALIZER_ORG = "Imdex Limited";
+const LIGHTHOUSE_PATH = "/lighthouse-results";
+const MINESWEEPER_PATH = "/minesweeper";
 const APP_BASE_PATH = normalizeBasePath(import.meta.env.BASE_URL);
-const MINESWEEPER_STORAGE_KEY = 'resume-minesweeper-v1';
-const MINESWEEPER_PRESETS: Record<Exclude<MinesweeperDifficulty, 'custom'>, { rows: number; cols: number; mines: number }> = {
+const MINESWEEPER_STORAGE_KEY = "resume-minesweeper-v1";
+const MINESWEEPER_PRESETS: Record<
+  Exclude<MinesweeperDifficulty, "custom">,
+  { rows: number; cols: number; mines: number }
+> = {
   beginner: { rows: 9, cols: 9, mines: 10 },
   intermediate: { rows: 16, cols: 16, mines: 40 },
-  expert: { rows: 16, cols: 30, mines: 99 }
+  expert: { rows: 16, cols: 30, mines: 99 },
 };
 
 const DEFAULT_INPUTS: DrillholeInputSet = {
   collarCsv: COLLAR_CSV,
   surveyCsv: SURVEY_CSV,
-  assayCsv: ASSAY_CSV
+  assayCsv: ASSAY_CSV,
 };
 
 const experience: ResumeEntry[] = [
   {
-    title: 'Software Engineer',
-    organization: 'Imdex Limited',
-    dates: 'Aug 2022 – Present',
+    title: "Software Engineer",
+    organization: "Imdex Limited",
+    dates: "Aug 2022 – Present",
     bullets: [
-  'Engineered web-based 3D visualizers using Three.js and ParaView across React and Vue to render interactive drillhole pathways, volumetric models, and subsurface spatial data.',
-  'Enhanced and expanded frontend applications in Angular for a cloud-based data portal that ingests and validates near-real-time drilling, structural, and downhole survey data streamed directly from field rigs.',
-  'Translated complex rock characterization and mineralogy datasets into product-ready user interfaces, streamlining data validation workflows for geoscientists.',
-  'Built full-stack web services and APIs (Express/C#) to enable secure end-to-end data transfer between rig-site hardware sensors and cloud analytics platforms.',
-]
+      "Engineered web-based 3D visualizers using Three.js and ParaView across React and Vue to render interactive drillhole pathways, volumetric models, and subsurface spatial data.",
+      "Enhanced and expanded frontend applications in Angular for a cloud-based data portal that ingests and validates near-real-time drilling, structural, and downhole survey data streamed directly from field rigs.",
+      "Translated complex rock characterization and mineralogy datasets into product-ready user interfaces, streamlining data validation workflows for geoscientists.",
+      "Built full-stack web services and APIs (Express/C#) to enable secure end-to-end data transfer between rig-site hardware sensors and cloud analytics platforms.",
+    ],
   },
   {
-    title: 'Back End Developer',
-    organization: 'Epic Safety',
-    dates: 'Jul 2021 – Aug 2022',
+    title: "Back End Developer",
+    organization: "Epic Safety",
+    dates: "Jul 2021 – Aug 2022",
     bullets: [
-'Engineered a resilient IoT data-processing platform with Node.js and TypeScript, using AWS Lambda and ECS to continuously collect, process, and persist high-volume device data in PostgreSQL.',
-'Automated infrastructure as code (IaC) and delivery pipelines via CloudFormation and Docker, accelerating release cycles and simplifying cloud deployment across AWS environments.',
-'Drove cross-team collaboration by establishing OpenAPI standard documentation via tsoa/Swagger and integrating core 3rd-party platforms (CRM, subscription accounting, and device management).'  ]
+      "Engineered a resilient IoT data-processing platform with Node.js and TypeScript, using AWS Lambda and ECS to continuously collect, process, and persist high-volume device data in PostgreSQL.",
+      "Automated infrastructure as code (IaC) and delivery pipelines via CloudFormation and Docker, accelerating release cycles and simplifying cloud deployment across AWS environments.",
+      "Drove cross-team collaboration by establishing OpenAPI standard documentation via tsoa/Swagger and integrating core 3rd-party platforms (CRM, subscription accounting, and device management).",
+    ],
   },
   {
-    title: 'Full Stack Web Developer',
-    organization: 'Edufunder Technologies Inc.',
-    dates: 'Mar 2020 – May 2021',
+    title: "Full Stack Web Developer",
+    organization: "Edufunder Technologies Inc.",
+    dates: "Mar 2020 – May 2021",
     bullets: [
-      'Implemented features on a mobile-friendly tuition crowdfunding platform using React, Node.js, MySQL, and AWS Elastic Beanstalk.',
-      'Added Stripe payment processing and automated deployment via GitHub Actions.',
-      'Integrated HubSpot marketing workflows for customized tracking and mailing lists.'
-    ]
+      "Implemented features on a mobile-friendly tuition crowdfunding platform using React, Node.js, MySQL, and AWS Elastic Beanstalk.",
+      "Added Stripe payment processing and automated deployment via GitHub Actions.",
+      "Integrated HubSpot marketing workflows for customized tracking and mailing lists.",
+    ],
   },
   {
-    title: 'Product Support Engineer iXp Intern',
-    organization: 'SAP',
-    dates: 'May 2019 – Dec 2019',
+    title: "Product Support Engineer iXp Intern",
+    organization: "SAP",
+    dates: "May 2019 – Dec 2019",
     bullets: [
-      'Supported SAP Web Intelligence and BI Semantic Layer tooling for enterprise customers.',
-      'Troubleshot issues through structured analysis, screen sharing, and knowledge-base article creation.',
-      'Finished 2nd in the annual intern hackathon with a sustainability-focused React app concept for SAP clients.'
-    ]
+      "Supported SAP Web Intelligence and BI Semantic Layer tooling for enterprise customers.",
+      "Troubleshot issues through structured analysis, screen sharing, and knowledge-base article creation.",
+      "Finished 2nd in the annual intern hackathon with a sustainability-focused React app concept for SAP clients.",
+    ],
   },
   {
-    title: 'IT Services Proctor',
-    organization: 'BCIT',
-    dates: 'Jun 2018 – Jun 2019',
+    title: "IT Services Proctor",
+    organization: "BCIT",
+    dates: "Jun 2018 – Jun 2019",
     bullets: [
-      'Provided front-line IT support in a ticketing environment.',
-      'Maintained computer labs with course-specific software and coordinated event support with AV Services.',
-      'Patched network drops and supported day-to-day campus technology operations.'
-    ]
-  }
+      "Provided front-line IT support in a ticketing environment.",
+      "Maintained computer labs with course-specific software and coordinated event support with AV Services.",
+      "Patched network drops and supported day-to-day campus technology operations.",
+    ],
+  },
 ];
 
 const personalProjects: ProjectEntry[] = [
   {
-    title: 'Linked Lists',
-    stack: 'Java & C++',
-    dates: 'Jun 2018 – Sep 2018',
-    description: 'Built doubly linked lists with sentinel nodes in Java and singly linked lists with bubble sort in C++.'
+    title: "Linked Lists",
+    stack: "Java & C++",
+    dates: "Jun 2018 – Sep 2018",
+    description:
+      "Built doubly linked lists with sentinel nodes in Java and singly linked lists with bubble sort in C++.",
   },
   {
-    title: 'Decision Trees',
-    stack: 'C++',
-    dates: 'Oct 2018 – Dec 2018',
-    description: 'Created a self-balancing AA tree and implemented decision-tree logic using the C4.5 algorithm.'
+    title: "Decision Trees",
+    stack: "C++",
+    dates: "Oct 2018 – Dec 2018",
+    description:
+      "Created a self-balancing AA tree and implemented decision-tree logic using the C4.5 algorithm.",
   },
   {
-    title: 'Automated Data Scraping',
-    stack: 'Node.js',
-    dates: 'Oct 2021',
-    description: 'Scheduled Puppeteer flows to log in, navigate, download content, and save organized output files.'
-  }
+    title: "Automated Data Scraping",
+    stack: "Node.js",
+    dates: "Oct 2021",
+    description:
+      "Scheduled Puppeteer flows to log in, navigate, download content, and save organized output files.",
+  },
 ];
 
 const academicProjects: ProjectEntry[] = [
   {
-    title: 'Jenkins Pipeline',
-    stack: 'Enterprise System Integration',
-    dates: 'Jan 2020 – May 2020',
-    description: 'Built a prototype Azure CI/CD pipeline integrating Jenkins, SonarQube, Nexus, Maven, GitHub, and GitLab for Java and Python repositories.'
+    title: "Jenkins Pipeline",
+    stack: "Enterprise System Integration",
+    dates: "Jan 2020 – May 2020",
+    description:
+      "Built a prototype Azure CI/CD pipeline integrating Jenkins, SonarQube, Nexus, Maven, GitHub, and GitLab for Java and Python repositories.",
   },
   {
-    title: 'Virtual Network',
-    stack: 'Principles of Enterprise Networking',
-    dates: 'Sep 2018 – Nov 2018',
-    description: 'Configured a CentOS VM network with multiple routers, IPv6, dynamic routing, DHCP, DNS, IPTables, and httpd.'
+    title: "Virtual Network",
+    stack: "Principles of Enterprise Networking",
+    dates: "Sep 2018 – Nov 2018",
+    description:
+      "Configured a CentOS VM network with multiple routers, IPv6, dynamic routing, DHCP, DNS, IPTables, and httpd.",
   },
   {
-    title: 'RESTful API and Tkinter GUI',
-    stack: 'Object Oriented Programming',
-    dates: 'Nov 2018',
-    description: 'Developed a sensor logging REST API and a Tkinter MVC front end for interacting with the service.'
-  }
+    title: "RESTful API and Tkinter GUI",
+    stack: "Object Oriented Programming",
+    dates: "Nov 2018",
+    description:
+      "Developed a sensor logging REST API and a Tkinter MVC front end for interacting with the service.",
+  },
 ];
 
 let visualizerInputs: DrillholeInputSet = { ...DEFAULT_INPUTS };
 let holeModels: HoleModel[] = [];
-let performanceData: Awaited<ReturnType<typeof loadPerformanceData>> | null = null;
-let applyVisualizerTheme: (theme: 'light' | 'dark') => void = () => {};
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let performanceData: Awaited<ReturnType<typeof loadPerformanceData>> | null =
+  null;
+let applyVisualizerTheme: (theme: "light" | "dark") => void = () => {};
+const prefersReducedMotion = window.matchMedia(
+  "(prefers-reduced-motion: reduce)",
+);
 let cleanupScene: () => void = () => {};
 let cleanupVisualizerShortcuts: (() => void) | null = null;
 let cleanupMinesweeperTicker: (() => void) | null = null;
 let themeToggle: HTMLButtonElement | null = null;
 
-const app = document.querySelector<HTMLDivElement>('#app');
+const app = document.querySelector<HTMLDivElement>("#app");
 
 if (!app) {
-  throw new Error('App container not found.');
+  throw new Error("App container not found.");
 }
 
 const appRoot = app;
 
-const storedTheme = window.localStorage.getItem('theme');
-const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : systemPrefersDark ? 'dark' : 'light';
+const storedTheme = window.localStorage.getItem("theme");
+const systemPrefersDark = window.matchMedia(
+  "(prefers-color-scheme: dark)",
+).matches;
+const initialTheme =
+  storedTheme === "light" || storedTheme === "dark"
+    ? storedTheme
+    : systemPrefersDark
+      ? "dark"
+      : "light";
 
 setTheme(initialTheme);
 restoreRouteFromRedirect();
-document.addEventListener('click', onRouteLinkClick);
-window.addEventListener('popstate', () => {
+document.addEventListener("click", onRouteLinkClick);
+window.addEventListener("popstate", () => {
   renderCurrentRoute();
 });
 renderCurrentRoute();
@@ -219,13 +244,13 @@ function onRouteLinkClick(event: MouseEvent) {
     return;
   }
 
-  const link = target.closest<HTMLAnchorElement>('a[data-route-link]');
+  const link = target.closest<HTMLAnchorElement>("a[data-route-link]");
   if (!link) {
     return;
   }
 
-  const routePath = link.dataset.routePath ?? link.getAttribute('href');
-  if (!routePath || routePath.startsWith('http')) {
+  const routePath = link.dataset.routePath ?? link.getAttribute("href");
+  if (!routePath || routePath.startsWith("http")) {
     return;
   }
 
@@ -237,7 +262,7 @@ function navigateTo(path: string) {
   const routePath = toRoutePath(path);
   const next = toAppPath(routePath);
   if (window.location.pathname !== next) {
-    window.history.pushState({}, '', next);
+    window.history.pushState({}, "", next);
   }
   renderCurrentRoute();
 }
@@ -246,19 +271,19 @@ function resolveRoute(pathname: string): SiteRoute {
   const routePath = toRoutePath(pathname);
 
   if (routePath === LIGHTHOUSE_PATH) {
-    return 'lighthouse-results';
+    return "lighthouse-results";
   }
 
   if (routePath === MINESWEEPER_PATH) {
-    return 'minesweeper';
+    return "minesweeper";
   }
 
-  return 'resume';
+  return "resume";
 }
 
 function navLink(routePath: string, label: string, isActive: boolean) {
   const href = toAppPath(routePath);
-  return `<a data-route-link="true" data-route-path="${routePath}" href="${href}" class="${isActive ? 'is-active' : ''}" aria-current="${isActive ? 'page' : 'false'}">${label}</a>`;
+  return `<a data-route-link="true" data-route-path="${routePath}" href="${href}" class="${isActive ? "is-active" : ""}" aria-current="${isActive ? "page" : "false"}">${label}</a>`;
 }
 
 function renderShell(route: SiteRoute, content: string) {
@@ -269,9 +294,9 @@ function renderShell(route: SiteRoute, content: string) {
         <div class="hero-header">
           <h1 class="hero-name">Tyler Alfreds</h1>
           <nav class="page-links" aria-label="Site pages">
-            ${navLink('/', 'Resume', route === 'resume')}
-            ${navLink(LIGHTHOUSE_PATH, 'Lighthouse Results', route === 'lighthouse-results')}
-            ${navLink(MINESWEEPER_PATH, 'Minesweeper', route === 'minesweeper')}
+            ${navLink("/", "Resume", route === "resume")}
+            ${navLink(LIGHTHOUSE_PATH, "Lighthouse Results", route === "lighthouse-results")}
+            ${navLink(MINESWEEPER_PATH, "Minesweeper", route === "minesweeper")}
             <button
               class="theme-toggle"
               type="button"
@@ -299,7 +324,7 @@ function renderResumePage() {
             </div>
           </div>
           <div class="section-list">
-            ${experience.map(renderRole).join('')}
+            ${experience.map(renderRole).join("")}
           </div>
         </article>
 
@@ -313,13 +338,13 @@ function renderResumePage() {
             <section class="project-group" aria-label="Personal projects">
               <h3 class="project-group-title">Personal projects</h3>
               <div class="project-list">
-                ${personalProjects.map(renderProject).join('')}
+                ${personalProjects.map(renderProject).join("")}
               </div>
             </section>
             <section class="project-group" aria-label="Academic projects">
               <h3 class="project-group-title">Academic projects</h3>
               <div class="project-list">
-                ${academicProjects.map(renderProject).join('')}
+                ${academicProjects.map(renderProject).join("")}
               </div>
             </section>
           </div>
@@ -329,24 +354,15 @@ function renderResumePage() {
   `;
 }
 
-function renderLighthousePlaceholderPage() {
-  return `
-    <section class="layout page-layout-single">
-      <article class="card page-card">
-        <div class="section-header">
-          <div>
-            <div class="eyebrow">Lighthouse Results</div>
-            <h1>Performance audit coming soon</h1>
-          </div>
-        </div>
-        <p class="page-copy">Placeholder page ready.</p>
-      </article>
-    </section>
-  `;
-}
-
 function renderMinesweeperPage() {
-  const state = loadMinesweeperState() ?? createMinesweeperState('beginner', MINESWEEPER_PRESETS.beginner.rows, MINESWEEPER_PRESETS.beginner.cols, MINESWEEPER_PRESETS.beginner.mines);
+  const state =
+    loadMinesweeperState() ??
+    createMinesweeperState(
+      "beginner",
+      MINESWEEPER_PRESETS.beginner.rows,
+      MINESWEEPER_PRESETS.beginner.cols,
+      MINESWEEPER_PRESETS.beginner.mines,
+    );
   const minesLeft = state.mines - countFlags(state.board);
   return `
     <section class="layout page-layout-single">
@@ -359,10 +375,10 @@ function renderMinesweeperPage() {
         <div class="minesweeper-classic-window" role="application" aria-label="Classic Minesweeper game">
           <fieldset class="minesweeper-settings" aria-label="Game difficulty">
             <legend>Difficulty</legend>
-            ${renderDifficultyOption('beginner', state.difficulty)}
-            ${renderDifficultyOption('intermediate', state.difficulty)}
-            ${renderDifficultyOption('expert', state.difficulty)}
-            ${renderDifficultyOption('custom', state.difficulty)}
+            ${renderDifficultyOption("beginner", state.difficulty)}
+            ${renderDifficultyOption("intermediate", state.difficulty)}
+            ${renderDifficultyOption("expert", state.difficulty)}
+            ${renderDifficultyOption("custom", state.difficulty)}
             <label class="difficulty-custom-field" for="custom-rows">
               Rows
               <input id="custom-rows" type="number" min="9" max="24" value="${state.rows}" />
@@ -397,17 +413,20 @@ function renderMinesweeperPage() {
   `;
 }
 
-function renderDifficultyOption(option: MinesweeperDifficulty, current: MinesweeperDifficulty) {
+function renderDifficultyOption(
+  option: MinesweeperDifficulty,
+  current: MinesweeperDifficulty,
+) {
   const labels: Record<MinesweeperDifficulty, string> = {
-    beginner: 'Beginner',
-    intermediate: 'Intermediate',
-    expert: 'Expert',
-    custom: 'Custom'
+    beginner: "Beginner",
+    intermediate: "Intermediate",
+    expert: "Expert",
+    custom: "Custom",
   };
 
   return `
     <label class="difficulty-option" for="difficulty-${option}">
-      <input type="radio" id="difficulty-${option}" name="minesweeper-difficulty" value="${option}" ${current === option ? 'checked' : ''} />
+      <input type="radio" id="difficulty-${option}" name="minesweeper-difficulty" value="${option}" ${current === option ? "checked" : ""} />
       ${labels[option]}
     </label>
   `;
@@ -423,70 +442,81 @@ async function renderCurrentRoute() {
   applyVisualizerTheme = () => {};
 
   const route = resolveRoute(window.location.pathname);
-  
-  if (route === 'resume') {
+
+  if (route === "resume") {
     if (holeModels.length === 0) {
       holeModels = await loadAndBuildHoleModels(visualizerInputs);
     }
     appRoot.innerHTML = renderShell(route, renderResumePage());
-  } else if (route === 'lighthouse-results') {
+  } else if (route === "lighthouse-results") {
     if (!performanceData) {
       performanceData = await loadPerformanceData();
     }
-    appRoot.innerHTML = renderShell(route, renderLighthouseResults(performanceData));
+    appRoot.innerHTML = renderShell(
+      route,
+      renderLighthouseResults(performanceData),
+    );
   } else {
     appRoot.innerHTML = renderShell(route, renderMinesweeperPage());
   }
 
-  themeToggle = document.querySelector<HTMLButtonElement>('.theme-toggle');
-  themeToggle?.addEventListener('click', () => {
-    setTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
+  themeToggle = document.querySelector<HTMLButtonElement>(".theme-toggle");
+  themeToggle?.addEventListener("click", () => {
+    setTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
   });
-  setTheme(document.body.dataset.theme === 'dark' ? 'dark' : 'light');
+  setTheme(document.body.dataset.theme === "dark" ? "dark" : "light");
 
-  if (route === 'resume') {
+  if (route === "resume") {
     cleanupScene = await createScene(holeModels);
     initializeVisualizerControls();
   }
 
-  if (route === 'minesweeper') {
+  if (route === "minesweeper") {
     initializeMinesweeperPage();
   }
 }
 
 function normalizeBasePath(basePath: string) {
   const path = basePath.trim();
-  if (!path || path === '/') {
-    return '/';
+  if (!path || path === "/") {
+    return "/";
   }
 
-  return `/${path.replace(/^\/+|\/+$/g, '')}`;
+  return `/${path.replace(/^\/+|\/+$/g, "")}`;
 }
 
 function toAppPath(routePath: string) {
-  const normalizedRoute = routePath === '/' ? '' : routePath.startsWith('/') ? routePath : `/${routePath}`;
+  const normalizedRoute =
+    routePath === "/"
+      ? ""
+      : routePath.startsWith("/")
+        ? routePath
+        : `/${routePath}`;
 
-  if (APP_BASE_PATH === '/') {
-    return normalizedRoute || '/';
+  if (APP_BASE_PATH === "/") {
+    return normalizedRoute || "/";
   }
 
-  return `${APP_BASE_PATH}${normalizedRoute}${normalizedRoute ? '' : '/'}`;
+  return `${APP_BASE_PATH}${normalizedRoute}${normalizedRoute ? "" : "/"}`;
 }
 
 function toRoutePath(pathname: string) {
-  const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  const normalizedPath = pathname.startsWith("/") ? pathname : `/${pathname}`;
 
-  if (APP_BASE_PATH === '/') {
-    return normalizedPath || '/';
+  if (APP_BASE_PATH === "/") {
+    return normalizedPath || "/";
   }
 
-  if (normalizedPath === APP_BASE_PATH || normalizedPath === `${APP_BASE_PATH}/`) {
-    return '/';
+  if (
+    normalizedPath === APP_BASE_PATH ||
+    normalizedPath === `${APP_BASE_PATH}/`
+  ) {
+    return "/";
   }
 
   if (normalizedPath.startsWith(`${APP_BASE_PATH}/`)) {
     const strippedPath = normalizedPath.slice(APP_BASE_PATH.length);
-    return strippedPath || '/';
+    return strippedPath || "/";
   }
 
   return normalizedPath;
@@ -494,21 +524,25 @@ function toRoutePath(pathname: string) {
 
 function restoreRouteFromRedirect() {
   const url = new URL(window.location.href);
-  const redirectedPath = url.searchParams.get('p');
+  const redirectedPath = url.searchParams.get("p");
   if (!redirectedPath) {
     return;
   }
 
   const restoredUrl = new URL(redirectedPath, window.location.origin);
   const restoredPath = toAppPath(restoredUrl.pathname);
-  window.history.replaceState({}, '', `${restoredPath}${restoredUrl.search}${restoredUrl.hash}`);
+  window.history.replaceState(
+    {},
+    "",
+    `${restoredPath}${restoredUrl.search}${restoredUrl.hash}`,
+  );
 }
 
 function renderRole(role: ResumeEntry) {
   const isFeaturedRole = role.organization === FEATURED_VISUALIZER_ORG;
 
   return `
-    <section class="role${isFeaturedRole ? ' role-with-visualizer' : ''}">
+    <section class="role${isFeaturedRole ? " role-with-visualizer" : ""}">
       <div class="role-main">
         <div class="job-header">
           <div>
@@ -518,10 +552,10 @@ function renderRole(role: ResumeEntry) {
           <div class="meta">${role.dates}</div>
         </div>
         <ul>
-          ${role.bullets.map((bullet) => `<li>${bullet}</li>`).join('')}
+          ${role.bullets.map((bullet) => `<li>${bullet}</li>`).join("")}
         </ul>
       </div>
-      ${isFeaturedRole ? renderImdexVisualizer() : ''}
+      ${isFeaturedRole ? renderImdexVisualizer() : ""}
     </section>
   `;
 }
@@ -559,7 +593,7 @@ function renderImdexVisualizer() {
           <div class="visualizer-stage" id="visualizer"></div>
           <div id="legend" class="legend-panel collapsible" aria-label="Interval labels">
             <div id="legend-items" class="legend legend-inline">
-              ${buildLithologyLegend(holeModels).map(renderLegendItem).join('')}
+              ${buildLithologyLegend(holeModels).map(renderLegendItem).join("")}
             </div>
           </div>
         </section>
@@ -613,7 +647,12 @@ function renderProject(project: ProjectEntry) {
   `;
 }
 
-function renderLegendItem(item: { lithology: string; color: string; maxCu: number; intervalCount: number }) {
+function renderLegendItem(item: {
+  lithology: string;
+  color: string;
+  maxCu: number;
+  intervalCount: number;
+}) {
   return `
     <div class="legend-item">
       <span class="legend-swatch" style="background:${item.color}"></span>
@@ -625,7 +664,12 @@ function renderLegendItem(item: { lithology: string; color: string; maxCu: numbe
   `;
 }
 
-function createMinesweeperState(difficulty: MinesweeperDifficulty, rows: number, cols: number, mines: number): MinesweeperState {
+function createMinesweeperState(
+  difficulty: MinesweeperDifficulty,
+  rows: number,
+  cols: number,
+  mines: number,
+): MinesweeperState {
   const board = createMinesweeperBoard(rows, cols, mines);
   return {
     difficulty,
@@ -633,20 +677,27 @@ function createMinesweeperState(difficulty: MinesweeperDifficulty, rows: number,
     cols,
     mines,
     board,
-    status: 'ready',
+    status: "ready",
     safeCellsRevealed: 0,
     elapsedMs: 0,
     startedAt: null,
-    finishedAt: null
+    finishedAt: null,
   };
 }
 
-function getDifficultyConfig(difficulty: MinesweeperDifficulty, custom?: { rows: number; cols: number; mines: number }) {
-  if (difficulty === 'custom' && custom) {
+function getDifficultyConfig(
+  difficulty: MinesweeperDifficulty,
+  custom?: { rows: number; cols: number; mines: number },
+) {
+  if (difficulty === "custom" && custom) {
     return normalizeCustomSettings(custom.rows, custom.cols, custom.mines);
   }
 
-  return MINESWEEPER_PRESETS[difficulty as Exclude<MinesweeperDifficulty, 'custom'>] ?? MINESWEEPER_PRESETS.beginner;
+  return (
+    MINESWEEPER_PRESETS[
+      difficulty as Exclude<MinesweeperDifficulty, "custom">
+    ] ?? MINESWEEPER_PRESETS.beginner
+  );
 }
 
 function normalizeCustomSettings(rows: number, cols: number, mines: number) {
@@ -658,7 +709,7 @@ function normalizeCustomSettings(rows: number, cols: number, mines: number) {
   return {
     rows: normalizedRows,
     cols: normalizedCols,
-    mines: normalizedMines
+    mines: normalizedMines,
   };
 }
 
@@ -666,13 +717,19 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function createMinesweeperBoard(rows: number, cols: number, mines: number): MinesweeperCell[][] {
-  const board: MinesweeperCell[][] = Array.from({ length: rows }, () => Array.from({ length: cols }, () => ({
-    hasMine: false,
-    revealed: false,
-    flagged: false,
-    adjacentMines: 0
-  })));
+function createMinesweeperBoard(
+  rows: number,
+  cols: number,
+  mines: number,
+): MinesweeperCell[][] {
+  const board: MinesweeperCell[][] = Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => ({
+      hasMine: false,
+      revealed: false,
+      flagged: false,
+      adjacentMines: 0,
+    })),
+  );
 
   const minePositions = new Set<number>();
   while (minePositions.size < mines) {
@@ -712,7 +769,11 @@ function recalculateAdjacentCounts(board: MinesweeperCell[][]) {
   }
 }
 
-function ensureSafeFirstClick(state: MinesweeperState, row: number, col: number) {
+function ensureSafeFirstClick(
+  state: MinesweeperState,
+  row: number,
+  col: number,
+) {
   const clicked = state.board[row]?.[col];
   if (!clicked || !clicked.hasMine) {
     return;
@@ -735,7 +796,12 @@ function ensureSafeFirstClick(state: MinesweeperState, row: number, col: number)
   }
 }
 
-function getNeighbors(row: number, col: number, rows: number, cols: number): Array<[number, number]> {
+function getNeighbors(
+  row: number,
+  col: number,
+  rows: number,
+  cols: number,
+): Array<[number, number]> {
   const neighbors: Array<[number, number]> = [];
   for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
     for (let colOffset = -1; colOffset <= 1; colOffset += 1) {
@@ -755,23 +821,23 @@ function getNeighbors(row: number, col: number, rows: number, cols: number): Arr
 }
 
 function buildMinesweeperStatusText(state: MinesweeperState) {
-  if (state.status === 'won') {
-    return 'You cleared the board.';
+  if (state.status === "won") {
+    return "You cleared the board.";
   }
 
-  if (state.status === 'lost') {
-    return 'Mine triggered.';
+  if (state.status === "lost") {
+    return "Mine triggered.";
   }
 
-  if (state.status === 'playing') {
-    return 'In progress.';
+  if (state.status === "playing") {
+    return "In progress.";
   }
 
-  return 'Ready. Left click reveal. Right click flag.';
+  return "Ready. Left click reveal. Right click flag.";
 }
 
 function getElapsedMs(state: MinesweeperState) {
-  if (state.status === 'playing' && state.startedAt) {
+  if (state.status === "playing" && state.startedAt) {
     return state.elapsedMs + (Date.now() - state.startedAt);
   }
 
@@ -785,51 +851,57 @@ function getElapsedSeconds(state: MinesweeperState) {
 function formatClassicCounter(value: number) {
   const bounded = Math.max(-99, Math.min(999, value));
   if (bounded < 0) {
-    return `-${Math.abs(bounded).toString().padStart(2, '0')}`;
+    return `-${Math.abs(bounded).toString().padStart(2, "0")}`;
   }
-  return bounded.toString().padStart(3, '0');
+  return bounded.toString().padStart(3, "0");
 }
 
-function inferDifficulty(rows: number, cols: number, mines: number): MinesweeperDifficulty {
-  if (rows === MINESWEEPER_PRESETS.beginner.rows && cols === MINESWEEPER_PRESETS.beginner.cols && mines === MINESWEEPER_PRESETS.beginner.mines) {
-    return 'beginner';
+function inferDifficulty(
+  rows: number,
+  cols: number,
+  mines: number,
+): MinesweeperDifficulty {
+  if (
+    rows === MINESWEEPER_PRESETS.beginner.rows &&
+    cols === MINESWEEPER_PRESETS.beginner.cols &&
+    mines === MINESWEEPER_PRESETS.beginner.mines
+  ) {
+    return "beginner";
   }
 
-  if (rows === MINESWEEPER_PRESETS.intermediate.rows && cols === MINESWEEPER_PRESETS.intermediate.cols && mines === MINESWEEPER_PRESETS.intermediate.mines) {
-    return 'intermediate';
+  if (
+    rows === MINESWEEPER_PRESETS.intermediate.rows &&
+    cols === MINESWEEPER_PRESETS.intermediate.cols &&
+    mines === MINESWEEPER_PRESETS.intermediate.mines
+  ) {
+    return "intermediate";
   }
 
-  if (rows === MINESWEEPER_PRESETS.expert.rows && cols === MINESWEEPER_PRESETS.expert.cols && mines === MINESWEEPER_PRESETS.expert.mines) {
-    return 'expert';
+  if (
+    rows === MINESWEEPER_PRESETS.expert.rows &&
+    cols === MINESWEEPER_PRESETS.expert.cols &&
+    mines === MINESWEEPER_PRESETS.expert.mines
+  ) {
+    return "expert";
   }
 
-  return 'custom';
+  return "custom";
 }
 
 function getMinesweeperFace(status: GameStatus, isPressed = false) {
-  if (isPressed && status !== 'won' && status !== 'lost') {
-    return '😮';
+  if (isPressed && status !== "won" && status !== "lost") {
+    return "😮";
   }
 
-  if (status === 'won') {
-    return '😎';
+  if (status === "won") {
+    return "😎";
   }
 
-  if (status === 'lost') {
-    return '😵';
+  if (status === "lost") {
+    return "😵";
   }
 
-  return '🙂';
-}
-
-function formatElapsedTime(state: MinesweeperState) {
-  const runningMs = state.status === 'playing' && state.startedAt
-    ? state.elapsedMs + (Date.now() - state.startedAt)
-    : state.elapsedMs;
-  const totalSeconds = Math.max(0, Math.floor(runningMs / 1000));
-  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-  const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-  return `${minutes}:${seconds}`;
+  return "🙂";
 }
 
 function countFlags(board: MinesweeperCell[][]) {
@@ -850,56 +922,73 @@ function renderMinesweeperBoard(state: MinesweeperState) {
   for (let row = 0; row < state.rows; row += 1) {
     for (let col = 0; col < state.cols; col += 1) {
       const cell = state.board[row][col];
-      const revealed = cell.revealed || (state.status === 'lost' && cell.hasMine);
-      let label = '';
+      const revealed =
+        cell.revealed || (state.status === "lost" && cell.hasMine);
+      let label = "";
 
       if (revealed && cell.hasMine) {
-        label = '*';
+        label = "*";
       } else if (cell.flagged && !revealed) {
-        label = '⚑';
+        label = "⚑";
       } else if (revealed && cell.adjacentMines > 0) {
         label = String(cell.adjacentMines);
       }
 
       const classes = [
-        'mine-cell',
-        revealed ? 'is-revealed' : 'is-hidden',
-        cell.flagged ? 'is-flagged' : '',
-        revealed && cell.hasMine ? 'is-mine' : '',
-        revealed && cell.adjacentMines > 0 ? `mine-count-${cell.adjacentMines}` : ''
-      ].filter(Boolean).join(' ');
+        "mine-cell",
+        revealed ? "is-revealed" : "is-hidden",
+        cell.flagged ? "is-flagged" : "",
+        revealed && cell.hasMine ? "is-mine" : "",
+        revealed && cell.adjacentMines > 0
+          ? `mine-count-${cell.adjacentMines}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
 
-      cells.push(`<button class="${classes}" type="button" data-mine-row="${row}" data-mine-col="${col}" aria-label="Cell ${row + 1},${col + 1}">${label}</button>`);
+      cells.push(
+        `<button class="${classes}" type="button" data-mine-row="${row}" data-mine-col="${col}" aria-label="Cell ${row + 1},${col + 1}">${label}</button>`,
+      );
     }
   }
 
-  return cells.join('');
+  return cells.join("");
 }
 
 function cloneMinesweeperState(state: MinesweeperState): MinesweeperState {
   return {
     ...state,
-    board: state.board.map((row) => row.map((cell) => ({ ...cell })))
+    board: state.board.map((row) => row.map((cell) => ({ ...cell }))),
   };
 }
 
-function revealMinesweeperCell(state: MinesweeperState, row: number, col: number): MinesweeperState {
+function revealMinesweeperCell(
+  state: MinesweeperState,
+  row: number,
+  col: number,
+): MinesweeperState {
   const next = cloneMinesweeperState(state);
   const cell = next.board[row]?.[col];
 
-  if (!cell || cell.flagged || cell.revealed || next.status === 'won' || next.status === 'lost') {
+  if (
+    !cell ||
+    cell.flagged ||
+    cell.revealed ||
+    next.status === "won" ||
+    next.status === "lost"
+  ) {
     return next;
   }
 
-  if (next.status === 'ready') {
+  if (next.status === "ready") {
     ensureSafeFirstClick(next, row, col);
-    next.status = 'playing';
+    next.status = "playing";
     next.startedAt = Date.now();
   }
 
   if (cell.hasMine) {
     cell.revealed = true;
-    next.status = 'lost';
+    next.status = "lost";
     if (next.startedAt) {
       next.elapsedMs += Date.now() - next.startedAt;
       next.startedAt = null;
@@ -921,7 +1010,12 @@ function revealMinesweeperCell(state: MinesweeperState, row: number, col: number
     next.safeCellsRevealed += 1;
 
     if (current.adjacentMines === 0) {
-      for (const [neighborRow, neighborCol] of getNeighbors(currentRow, currentCol, next.rows, next.cols)) {
+      for (const [neighborRow, neighborCol] of getNeighbors(
+        currentRow,
+        currentCol,
+        next.rows,
+        next.cols,
+      )) {
         const neighbor = next.board[neighborRow][neighborCol];
         if (!neighbor.revealed && !neighbor.hasMine) {
           queue.push([neighborRow, neighborCol]);
@@ -931,7 +1025,7 @@ function revealMinesweeperCell(state: MinesweeperState, row: number, col: number
   }
 
   if (next.safeCellsRevealed >= next.rows * next.cols - next.mines) {
-    next.status = 'won';
+    next.status = "won";
     if (next.startedAt) {
       next.elapsedMs += Date.now() - next.startedAt;
       next.startedAt = null;
@@ -942,11 +1036,20 @@ function revealMinesweeperCell(state: MinesweeperState, row: number, col: number
   return next;
 }
 
-function toggleMinesweeperFlag(state: MinesweeperState, row: number, col: number): MinesweeperState {
+function toggleMinesweeperFlag(
+  state: MinesweeperState,
+  row: number,
+  col: number,
+): MinesweeperState {
   const next = cloneMinesweeperState(state);
   const cell = next.board[row]?.[col];
 
-  if (!cell || cell.revealed || next.status === 'won' || next.status === 'lost') {
+  if (
+    !cell ||
+    cell.revealed ||
+    next.status === "won" ||
+    next.status === "lost"
+  ) {
     return next;
   }
 
@@ -954,14 +1057,27 @@ function toggleMinesweeperFlag(state: MinesweeperState, row: number, col: number
   return next;
 }
 
-function chordReveal(state: MinesweeperState, row: number, col: number): MinesweeperState {
+function chordReveal(
+  state: MinesweeperState,
+  row: number,
+  col: number,
+): MinesweeperState {
   const cell = state.board[row]?.[col];
-  if (!cell || !cell.revealed || cell.adjacentMines <= 0 || state.status === 'won' || state.status === 'lost') {
+  if (
+    !cell ||
+    !cell.revealed ||
+    cell.adjacentMines <= 0 ||
+    state.status === "won" ||
+    state.status === "lost"
+  ) {
     return state;
   }
 
   const neighbors = getNeighbors(row, col, state.rows, state.cols);
-  const flaggedCount = neighbors.filter(([neighborRow, neighborCol]) => state.board[neighborRow][neighborCol].flagged).length;
+  const flaggedCount = neighbors.filter(
+    ([neighborRow, neighborCol]) =>
+      state.board[neighborRow][neighborCol].flagged,
+  ).length;
 
   if (flaggedCount !== cell.adjacentMines) {
     return state;
@@ -972,7 +1088,7 @@ function chordReveal(state: MinesweeperState, row: number, col: number): Mineswe
     const neighbor = next.board[neighborRow][neighborCol];
     if (!neighbor.flagged && !neighbor.revealed) {
       next = revealMinesweeperCell(next, neighborRow, neighborCol);
-      if (next.status === 'lost') {
+      if (next.status === "lost") {
         break;
       }
     }
@@ -993,7 +1109,12 @@ function loadMinesweeperState() {
 
   try {
     const parsed = JSON.parse(raw) as MinesweeperState;
-    if (!Array.isArray(parsed.board) || typeof parsed.rows !== 'number' || typeof parsed.cols !== 'number' || typeof parsed.mines !== 'number') {
+    if (
+      !Array.isArray(parsed.board) ||
+      typeof parsed.rows !== "number" ||
+      typeof parsed.cols !== "number" ||
+      typeof parsed.mines !== "number"
+    ) {
       return null;
     }
 
@@ -1005,7 +1126,10 @@ function loadMinesweeperState() {
       return null;
     }
 
-    if (parsed.board.length !== safeRows || parsed.board.some((row) => row.length !== safeCols)) {
+    if (
+      parsed.board.length !== safeRows ||
+      parsed.board.some((row) => row.length !== safeCols)
+    ) {
       return null;
     }
 
@@ -1014,15 +1138,18 @@ function loadMinesweeperState() {
       return null;
     }
 
-    const safeRevealed = parsed.board.flat().filter((cell) => cell.revealed && !cell.hasMine).length;
+    const safeRevealed = parsed.board
+      .flat()
+      .filter((cell) => cell.revealed && !cell.hasMine).length;
 
     return {
       ...parsed,
-      difficulty: parsed.difficulty ?? inferDifficulty(safeRows, safeCols, safeMines),
+      difficulty:
+        parsed.difficulty ?? inferDifficulty(safeRows, safeCols, safeMines),
       rows: safeRows,
       cols: safeCols,
       mines: safeMines,
-      safeCellsRevealed: safeRevealed
+      safeCellsRevealed: safeRevealed,
     };
   } catch {
     return null;
@@ -1030,28 +1157,62 @@ function loadMinesweeperState() {
 }
 
 function initializeMinesweeperPage() {
-  const board = document.querySelector<HTMLDivElement>('#minesweeper-board');
-  const faceButton = document.querySelector<HTMLButtonElement>('#minesweeper-new');
-  const resetButton = document.querySelector<HTMLButtonElement>('#minesweeper-reset-save');
-  const applySettingsButton = document.querySelector<HTMLButtonElement>('#minesweeper-apply-settings');
-  const difficultyInputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="minesweeper-difficulty"]'));
-  const customRowsInput = document.querySelector<HTMLInputElement>('#custom-rows');
-  const customColsInput = document.querySelector<HTMLInputElement>('#custom-cols');
-  const customMinesInput = document.querySelector<HTMLInputElement>('#custom-mines');
-  const mineCounter = document.querySelector<HTMLDivElement>('#minesweeper-mine-counter');
-  const status = document.querySelector<HTMLSpanElement>('#minesweeper-status-text');
-  const timer = document.querySelector<HTMLDivElement>('#minesweeper-timer');
+  const board = document.querySelector<HTMLDivElement>("#minesweeper-board");
+  const faceButton =
+    document.querySelector<HTMLButtonElement>("#minesweeper-new");
+  const resetButton = document.querySelector<HTMLButtonElement>(
+    "#minesweeper-reset-save",
+  );
+  const applySettingsButton = document.querySelector<HTMLButtonElement>(
+    "#minesweeper-apply-settings",
+  );
+  const difficultyInputs = Array.from(
+    document.querySelectorAll<HTMLInputElement>(
+      'input[name="minesweeper-difficulty"]',
+    ),
+  );
+  const customRowsInput =
+    document.querySelector<HTMLInputElement>("#custom-rows");
+  const customColsInput =
+    document.querySelector<HTMLInputElement>("#custom-cols");
+  const customMinesInput =
+    document.querySelector<HTMLInputElement>("#custom-mines");
+  const mineCounter = document.querySelector<HTMLDivElement>(
+    "#minesweeper-mine-counter",
+  );
+  const status = document.querySelector<HTMLSpanElement>(
+    "#minesweeper-status-text",
+  );
+  const timer = document.querySelector<HTMLDivElement>("#minesweeper-timer");
 
-  if (!board || !faceButton || !resetButton || !applySettingsButton || !customRowsInput || !customColsInput || !customMinesInput || !mineCounter || !status || !timer) {
+  if (
+    !board ||
+    !faceButton ||
+    !resetButton ||
+    !applySettingsButton ||
+    !customRowsInput ||
+    !customColsInput ||
+    !customMinesInput ||
+    !mineCounter ||
+    !status ||
+    !timer
+  ) {
     return;
   }
 
-  let state = loadMinesweeperState() ?? createMinesweeperState('beginner', MINESWEEPER_PRESETS.beginner.rows, MINESWEEPER_PRESETS.beginner.cols, MINESWEEPER_PRESETS.beginner.mines);
+  let state =
+    loadMinesweeperState() ??
+    createMinesweeperState(
+      "beginner",
+      MINESWEEPER_PRESETS.beginner.rows,
+      MINESWEEPER_PRESETS.beginner.cols,
+      MINESWEEPER_PRESETS.beginner.mines,
+    );
   let chordPreviewCells: HTMLButtonElement[] = [];
 
   const syncFace = (isPressed = false) => {
     faceButton.textContent = getMinesweeperFace(state.status, isPressed);
-    faceButton.classList.toggle('is-pressed', isPressed);
+    faceButton.classList.toggle("is-pressed", isPressed);
   };
 
   const syncDifficultyInputs = () => {
@@ -1063,7 +1224,7 @@ function initializeMinesweeperPage() {
     customColsInput.value = String(state.cols);
     customMinesInput.value = String(state.mines);
 
-    const customActive = state.difficulty === 'custom';
+    const customActive = state.difficulty === "custom";
     customRowsInput.disabled = !customActive;
     customColsInput.disabled = !customActive;
     customMinesInput.disabled = !customActive;
@@ -1074,7 +1235,7 @@ function initializeMinesweeperPage() {
     const cols = Number(customColsInput.value);
 
     if (!Number.isFinite(rows) || !Number.isFinite(cols)) {
-      customMinesInput.max = '668';
+      customMinesInput.max = "668";
       return;
     }
 
@@ -1086,10 +1247,20 @@ function initializeMinesweeperPage() {
     updateCustomMinesLimit();
 
     const maxMines = Number(customMinesInput.max);
-    const checks: Array<{ input: HTMLInputElement; label: string; min: number; max: number }> = [
-      { input: customRowsInput, label: 'Rows', min: 9, max: 24 },
-      { input: customColsInput, label: 'Cols', min: 9, max: 30 },
-      { input: customMinesInput, label: 'Mines', min: 10, max: Number.isFinite(maxMines) ? maxMines : 668 }
+    const checks: Array<{
+      input: HTMLInputElement;
+      label: string;
+      min: number;
+      max: number;
+    }> = [
+      { input: customRowsInput, label: "Rows", min: 9, max: 24 },
+      { input: customColsInput, label: "Cols", min: 9, max: 30 },
+      {
+        input: customMinesInput,
+        label: "Mines",
+        min: 10,
+        max: Number.isFinite(maxMines) ? maxMines : 668,
+      },
     ];
 
     let isValid = true;
@@ -1100,13 +1271,17 @@ function initializeMinesweeperPage() {
         check.input.setCustomValidity(`${check.label} must be a number.`);
         isValid = false;
       } else if (Math.floor(numericValue) < check.min) {
-        check.input.setCustomValidity(`${check.label} must be at least ${check.min}.`);
+        check.input.setCustomValidity(
+          `${check.label} must be at least ${check.min}.`,
+        );
         isValid = false;
       } else if (Math.floor(numericValue) > check.max) {
-        check.input.setCustomValidity(`${check.label} must be no more than ${check.max}.`);
+        check.input.setCustomValidity(
+          `${check.label} must be no more than ${check.max}.`,
+        );
         isValid = false;
       } else {
-        check.input.setCustomValidity('');
+        check.input.setCustomValidity("");
       }
     }
 
@@ -1124,7 +1299,9 @@ function initializeMinesweeperPage() {
     board.style.gridTemplateColumns = `repeat(${state.cols}, minmax(0, 1fr))`;
     status.textContent = buildMinesweeperStatusText(state);
     timer.textContent = formatClassicCounter(getElapsedSeconds(state));
-    mineCounter.textContent = formatClassicCounter(state.mines - countFlags(state.board));
+    mineCounter.textContent = formatClassicCounter(
+      state.mines - countFlags(state.board),
+    );
     syncFace();
     syncDifficultyInputs();
 
@@ -1133,7 +1310,7 @@ function initializeMinesweeperPage() {
 
   const clearChordPreview = () => {
     for (const cell of chordPreviewCells) {
-      cell.classList.remove('is-chord-preview');
+      cell.classList.remove("is-chord-preview");
     }
     chordPreviewCells = [];
   };
@@ -1142,54 +1319,78 @@ function initializeMinesweeperPage() {
     clearChordPreview();
 
     const source = state.board[row]?.[col];
-    if (!source || !source.revealed || source.adjacentMines <= 0 || state.status === 'won' || state.status === 'lost') {
+    if (
+      !source ||
+      !source.revealed ||
+      source.adjacentMines <= 0 ||
+      state.status === "won" ||
+      state.status === "lost"
+    ) {
       return;
     }
 
-    for (const [nextRow, nextCol] of getNeighbors(row, col, state.rows, state.cols)) {
+    for (const [nextRow, nextCol] of getNeighbors(
+      row,
+      col,
+      state.rows,
+      state.cols,
+    )) {
       const neighbor = state.board[nextRow][nextCol];
       if (neighbor.revealed || neighbor.flagged) {
         continue;
       }
 
-      const button = board.querySelector<HTMLButtonElement>(`button[data-mine-row="${nextRow}"][data-mine-col="${nextCol}"]`);
+      const button = board.querySelector<HTMLButtonElement>(
+        `button[data-mine-row="${nextRow}"][data-mine-col="${nextCol}"]`,
+      );
       if (!button) {
         continue;
       }
 
-      button.classList.add('is-chord-preview');
+      button.classList.add("is-chord-preview");
       chordPreviewCells.push(button);
     }
   };
 
   const setFreshGame = () => {
-    if (state.difficulty === 'custom' && !validateCustomInputs(true)) {
+    if (state.difficulty === "custom" && !validateCustomInputs(true)) {
       return;
     }
 
     const config = getDifficultyConfig(state.difficulty, {
       rows: Number(customRowsInput.value),
       cols: Number(customColsInput.value),
-      mines: Number(customMinesInput.value)
+      mines: Number(customMinesInput.value),
     });
-    state = createMinesweeperState(state.difficulty, config.rows, config.cols, config.mines);
+    state = createMinesweeperState(
+      state.difficulty,
+      config.rows,
+      config.cols,
+      config.mines,
+    );
     updateView();
   };
 
   const applySelectedDifficulty = () => {
-    const selected = difficultyInputs.find((input) => input.checked)?.value as MinesweeperDifficulty | undefined;
-    const nextDifficulty: MinesweeperDifficulty = selected ?? 'beginner';
+    const selected = difficultyInputs.find((input) => input.checked)?.value as
+      MinesweeperDifficulty | undefined;
+    const nextDifficulty: MinesweeperDifficulty = selected ?? "beginner";
 
-    if (nextDifficulty === 'custom' && !validateCustomInputs(true)) {
+    if (nextDifficulty === "custom" && !validateCustomInputs(true)) {
       return;
     }
 
     const config = getDifficultyConfig(nextDifficulty, {
       rows: Number(customRowsInput.value),
       cols: Number(customColsInput.value),
-      mines: Number(customMinesInput.value)
+      mines: Number(customMinesInput.value),
     });
-    state = createMinesweeperState(nextDifficulty, config.rows, config.cols, config.mines);
+    state = createMinesweeperState(
+      nextDifficulty,
+      config.rows,
+      config.cols,
+      config.mines,
+    );
     updateView();
   };
 
@@ -1233,10 +1434,10 @@ function initializeMinesweeperPage() {
     updateView();
   };
 
-  board.addEventListener('click', onBoardClick);
-  board.addEventListener('contextmenu', onBoardContextMenu);
-  faceButton.addEventListener('click', setFreshGame);
-  applySettingsButton.addEventListener('click', applySelectedDifficulty);
+  board.addEventListener("click", onBoardClick);
+  board.addEventListener("contextmenu", onBoardContextMenu);
+  faceButton.addEventListener("click", setFreshGame);
+  applySettingsButton.addEventListener("click", applySelectedDifficulty);
 
   const onCustomInputBlur = (event: FocusEvent) => {
     const target = event.target;
@@ -1251,17 +1452,17 @@ function initializeMinesweeperPage() {
     validateCustomInputs(false);
   };
 
-  customRowsInput.addEventListener('input', onCustomInputChange);
-  customColsInput.addEventListener('input', onCustomInputChange);
-  customMinesInput.addEventListener('input', onCustomInputChange);
-  customRowsInput.addEventListener('blur', onCustomInputBlur);
-  customColsInput.addEventListener('blur', onCustomInputBlur);
-  customMinesInput.addEventListener('blur', onCustomInputBlur);
+  customRowsInput.addEventListener("input", onCustomInputChange);
+  customColsInput.addEventListener("input", onCustomInputChange);
+  customMinesInput.addEventListener("input", onCustomInputChange);
+  customRowsInput.addEventListener("blur", onCustomInputBlur);
+  customColsInput.addEventListener("blur", onCustomInputBlur);
+  customMinesInput.addEventListener("blur", onCustomInputBlur);
 
   difficultyInputs.forEach((input) => {
-    input.addEventListener('change', () => {
+    input.addEventListener("change", () => {
       const selected = input.value as MinesweeperDifficulty;
-      if (selected !== 'custom') {
+      if (selected !== "custom") {
         const config = getDifficultyConfig(selected);
         customRowsInput.value = String(config.rows);
         customColsInput.value = String(config.cols);
@@ -1270,14 +1471,14 @@ function initializeMinesweeperPage() {
 
       updateCustomMinesLimit();
 
-      if (state.status === 'ready') {
+      if (state.status === "ready") {
         applySelectedDifficulty();
         return;
       }
 
       state = {
         ...state,
-        difficulty: selected
+        difficulty: selected,
       };
       updateView();
     });
@@ -1325,41 +1526,46 @@ function initializeMinesweeperPage() {
     syncFace();
   };
 
-  board.addEventListener('mousedown', onBoardMouseDown);
-  board.addEventListener('mouseup', onBoardMouseUp);
-  board.addEventListener('mouseleave', onBoardMouseLeave);
-  faceButton.addEventListener('mousedown', onFaceMouseDown);
-  faceButton.addEventListener('mouseup', onFaceMouseUp);
-  faceButton.addEventListener('mouseleave', onFaceMouseLeave);
+  board.addEventListener("mousedown", onBoardMouseDown);
+  board.addEventListener("mouseup", onBoardMouseUp);
+  board.addEventListener("mouseleave", onBoardMouseLeave);
+  faceButton.addEventListener("mousedown", onFaceMouseDown);
+  faceButton.addEventListener("mouseup", onFaceMouseUp);
+  faceButton.addEventListener("mouseleave", onFaceMouseLeave);
 
-  resetButton.addEventListener('click', () => {
+  resetButton.addEventListener("click", () => {
     window.localStorage.removeItem(MINESWEEPER_STORAGE_KEY);
-    state = createMinesweeperState('beginner', MINESWEEPER_PRESETS.beginner.rows, MINESWEEPER_PRESETS.beginner.cols, MINESWEEPER_PRESETS.beginner.mines);
+    state = createMinesweeperState(
+      "beginner",
+      MINESWEEPER_PRESETS.beginner.rows,
+      MINESWEEPER_PRESETS.beginner.cols,
+      MINESWEEPER_PRESETS.beginner.mines,
+    );
     updateView();
   });
 
   const intervalId = window.setInterval(() => {
-    if (state.status === 'playing') {
+    if (state.status === "playing") {
       timer.textContent = formatClassicCounter(getElapsedSeconds(state));
     }
   }, 1000);
 
   cleanupMinesweeperTicker = () => {
     clearChordPreview();
-    board.removeEventListener('click', onBoardClick);
-    board.removeEventListener('contextmenu', onBoardContextMenu);
-    board.removeEventListener('mousedown', onBoardMouseDown);
-    board.removeEventListener('mouseup', onBoardMouseUp);
-    board.removeEventListener('mouseleave', onBoardMouseLeave);
-    faceButton.removeEventListener('mousedown', onFaceMouseDown);
-    faceButton.removeEventListener('mouseup', onFaceMouseUp);
-    faceButton.removeEventListener('mouseleave', onFaceMouseLeave);
-    customRowsInput.removeEventListener('input', onCustomInputChange);
-    customColsInput.removeEventListener('input', onCustomInputChange);
-    customMinesInput.removeEventListener('input', onCustomInputChange);
-    customRowsInput.removeEventListener('blur', onCustomInputBlur);
-    customColsInput.removeEventListener('blur', onCustomInputBlur);
-    customMinesInput.removeEventListener('blur', onCustomInputBlur);
+    board.removeEventListener("click", onBoardClick);
+    board.removeEventListener("contextmenu", onBoardContextMenu);
+    board.removeEventListener("mousedown", onBoardMouseDown);
+    board.removeEventListener("mouseup", onBoardMouseUp);
+    board.removeEventListener("mouseleave", onBoardMouseLeave);
+    faceButton.removeEventListener("mousedown", onFaceMouseDown);
+    faceButton.removeEventListener("mouseup", onFaceMouseUp);
+    faceButton.removeEventListener("mouseleave", onFaceMouseLeave);
+    customRowsInput.removeEventListener("input", onCustomInputChange);
+    customColsInput.removeEventListener("input", onCustomInputChange);
+    customMinesInput.removeEventListener("input", onCustomInputChange);
+    customRowsInput.removeEventListener("blur", onCustomInputBlur);
+    customColsInput.removeEventListener("blur", onCustomInputBlur);
+    customMinesInput.removeEventListener("blur", onCustomInputBlur);
     window.clearInterval(intervalId);
   };
 
@@ -1368,38 +1574,74 @@ function initializeMinesweeperPage() {
   updateView();
 }
 
-function setTheme(theme: 'light' | 'dark') {
+function setTheme(theme: "light" | "dark") {
   document.body.dataset.theme = theme;
-  window.localStorage.setItem('theme', theme);
+  window.localStorage.setItem("theme", theme);
   applyVisualizerTheme(theme);
 
   if (themeToggle) {
-    themeToggle.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+    themeToggle.textContent = theme === "dark" ? "Light Mode" : "Dark Mode";
   }
 }
 
 function initializeVisualizerControls() {
-  const toggleDataButton = document.querySelector<HTMLButtonElement>('#toggle-trajectory-data');
-  const trajectoryDataSection = document.querySelector<HTMLElement>('#trajectory-data-section');
-  const toggleLegendButton = document.querySelector<HTMLButtonElement>('#toggle-legend');
-  const legendSection = document.querySelector<HTMLElement>('#legend');
-  const rebuildButton = document.querySelector<HTMLButtonElement>('#rebuild-visualizer');
-  const resetButton = document.querySelector<HTMLButtonElement>('#reset-visualizer');
-  const autoRebuildToggle = document.querySelector<HTMLInputElement>('#auto-rebuild-toggle');
-  const collarInput = document.querySelector<HTMLTextAreaElement>('#collar-csv-input');
-  const surveyInput = document.querySelector<HTMLTextAreaElement>('#survey-csv-input');
-  const assayInput = document.querySelector<HTMLTextAreaElement>('#assay-csv-input');
-  const status = document.querySelector<HTMLParagraphElement>('#visualizer-status');
-  const errorPanel = document.querySelector<HTMLDivElement>('#visualizer-errors');
-  const errorList = document.querySelector<HTMLUListElement>('#visualizer-error-list');
+  const toggleDataButton = document.querySelector<HTMLButtonElement>(
+    "#toggle-trajectory-data",
+  );
+  const trajectoryDataSection = document.querySelector<HTMLElement>(
+    "#trajectory-data-section",
+  );
+  const toggleLegendButton =
+    document.querySelector<HTMLButtonElement>("#toggle-legend");
+  const legendSection = document.querySelector<HTMLElement>("#legend");
+  const rebuildButton = document.querySelector<HTMLButtonElement>(
+    "#rebuild-visualizer",
+  );
+  const resetButton =
+    document.querySelector<HTMLButtonElement>("#reset-visualizer");
+  const autoRebuildToggle = document.querySelector<HTMLInputElement>(
+    "#auto-rebuild-toggle",
+  );
+  const collarInput =
+    document.querySelector<HTMLTextAreaElement>("#collar-csv-input");
+  const surveyInput =
+    document.querySelector<HTMLTextAreaElement>("#survey-csv-input");
+  const assayInput =
+    document.querySelector<HTMLTextAreaElement>("#assay-csv-input");
+  const status =
+    document.querySelector<HTMLParagraphElement>("#visualizer-status");
+  const errorPanel =
+    document.querySelector<HTMLDivElement>("#visualizer-errors");
+  const errorList = document.querySelector<HTMLUListElement>(
+    "#visualizer-error-list",
+  );
 
-  if (!toggleDataButton || !trajectoryDataSection || !toggleLegendButton || !legendSection || !rebuildButton || !resetButton || !autoRebuildToggle || !collarInput || !surveyInput || !assayInput || !status || !errorPanel || !errorList) {
+  if (
+    !toggleDataButton ||
+    !trajectoryDataSection ||
+    !toggleLegendButton ||
+    !legendSection ||
+    !rebuildButton ||
+    !resetButton ||
+    !autoRebuildToggle ||
+    !collarInput ||
+    !surveyInput ||
+    !assayInput ||
+    !status ||
+    !errorPanel ||
+    !errorList
+  ) {
     return;
   }
 
-  const setToggleLabel = (button: HTMLButtonElement, expanded: boolean, visibleLabel: string, hiddenLabel: string) => {
+  const setToggleLabel = (
+    button: HTMLButtonElement,
+    expanded: boolean,
+    visibleLabel: string,
+    hiddenLabel: string,
+  ) => {
     button.textContent = expanded ? visibleLabel : hiddenLabel;
-    button.setAttribute('aria-expanded', String(expanded));
+    button.setAttribute("aria-expanded", String(expanded));
   };
 
   const setCollapsibleState = (
@@ -1407,40 +1649,40 @@ function initializeVisualizerControls() {
     button: HTMLButtonElement,
     expanded: boolean,
     expandedLabel: string,
-    collapsedLabel: string
+    collapsedLabel: string,
   ) => {
     if (isReducedMotionPreferred()) {
-      target.classList.toggle('is-open', expanded);
-      target.classList.toggle('is-collapsed', !expanded);
-      target.style.maxHeight = expanded ? 'none' : '0px';
-      target.style.opacity = expanded ? '1' : '0';
+      target.classList.toggle("is-open", expanded);
+      target.classList.toggle("is-collapsed", !expanded);
+      target.style.maxHeight = expanded ? "none" : "0px";
+      target.style.opacity = expanded ? "1" : "0";
       setToggleLabel(button, expanded, expandedLabel, collapsedLabel);
       return;
     }
 
     if (expanded) {
-      target.classList.remove('is-collapsed');
-      target.classList.add('is-open');
+      target.classList.remove("is-collapsed");
+      target.classList.add("is-open");
       target.style.maxHeight = `${target.scrollHeight}px`;
-      target.style.opacity = '1';
+      target.style.opacity = "1";
       window.setTimeout(() => {
-        if (target.classList.contains('is-open')) {
-          target.style.maxHeight = 'none';
+        if (target.classList.contains("is-open")) {
+          target.style.maxHeight = "none";
         }
       }, 260);
     } else {
-      target.classList.remove('is-collapsed');
+      target.classList.remove("is-collapsed");
       const currentHeight = target.scrollHeight;
       target.style.maxHeight = `${currentHeight}px`;
       window.requestAnimationFrame(() => {
-        target.classList.remove('is-open');
-        target.style.maxHeight = '0px';
-        target.style.opacity = '0';
+        target.classList.remove("is-open");
+        target.style.maxHeight = "0px";
+        target.style.opacity = "0";
       });
 
       window.setTimeout(() => {
-        if (!target.classList.contains('is-open')) {
-          target.classList.add('is-collapsed');
+        if (!target.classList.contains("is-open")) {
+          target.classList.add("is-collapsed");
         }
       }, 250);
     }
@@ -1451,8 +1693,20 @@ function initializeVisualizerControls() {
   let isTrajectoryDataOpen = false;
   let isLegendOpen = false;
 
-  setCollapsibleState(trajectoryDataSection, toggleDataButton, isTrajectoryDataOpen, 'Hide trajectory data', 'Show trajectory data');
-  setCollapsibleState(legendSection, toggleLegendButton, isLegendOpen, 'Hide labels', 'Show labels');
+  setCollapsibleState(
+    trajectoryDataSection,
+    toggleDataButton,
+    isTrajectoryDataOpen,
+    "Hide trajectory data",
+    "Show trajectory data",
+  );
+  setCollapsibleState(
+    legendSection,
+    toggleLegendButton,
+    isLegendOpen,
+    "Hide labels",
+    "Show labels",
+  );
 
   const autoRebuildDelayMs = 700;
   let autoRebuildTimer: number | undefined;
@@ -1460,25 +1714,27 @@ function initializeVisualizerControls() {
   const getCurrentInputs = (): DrillholeInputSet => ({
     collarCsv: collarInput.value.trim(),
     surveyCsv: surveyInput.value.trim(),
-    assayCsv: assayInput.value.trim()
+    assayCsv: assayInput.value.trim(),
   });
 
   const clearErrors = () => {
     errorPanel.hidden = true;
-    errorList.innerHTML = '';
+    errorList.innerHTML = "";
   };
 
   const setErrors = (messages: string[]) => {
-    errorList.innerHTML = messages.map((message) => `<li>${escapeHtml(message)}</li>`).join('');
+    errorList.innerHTML = messages
+      .map((message) => `<li>${escapeHtml(message)}</li>`)
+      .join("");
     errorPanel.hidden = false;
-    status.textContent = 'Fix the data issues and rebuild again.';
-    status.dataset.state = 'error';
+    status.textContent = "Fix the data issues and rebuild again.";
+    status.dataset.state = "error";
   };
 
   const setSuccess = (message: string) => {
     clearErrors();
     status.textContent = message;
-    status.dataset.state = 'success';
+    status.dataset.state = "success";
   };
 
   const validateAndBuildModels = (inputs: DrillholeInputSet) => {
@@ -1487,19 +1743,25 @@ function initializeVisualizerControls() {
     try {
       parseCollars(inputs.collarCsv);
     } catch (error) {
-      errors.push(`Collar CSV: ${error instanceof Error ? error.message : 'Invalid data.'}`);
+      errors.push(
+        `Collar CSV: ${error instanceof Error ? error.message : "Invalid data."}`,
+      );
     }
 
     try {
       parseSurveyRows(inputs.surveyCsv);
     } catch (error) {
-      errors.push(`Survey CSV: ${error instanceof Error ? error.message : 'Invalid data.'}`);
+      errors.push(
+        `Survey CSV: ${error instanceof Error ? error.message : "Invalid data."}`,
+      );
     }
 
     try {
       parseAssayRows(inputs.assayCsv);
     } catch (error) {
-      errors.push(`Assay CSV: ${error instanceof Error ? error.message : 'Invalid data.'}`);
+      errors.push(
+        `Assay CSV: ${error instanceof Error ? error.message : "Invalid data."}`,
+      );
     }
 
     if (errors.length > 0) {
@@ -1509,7 +1771,7 @@ function initializeVisualizerControls() {
     return { models: [], errors: [] as string[] };
   };
 
-  const rebuild = async (source: 'manual' | 'auto' = 'manual') => {
+  const rebuild = async (source: "manual" | "auto" = "manual") => {
     if (autoRebuildTimer) {
       window.clearTimeout(autoRebuildTimer);
       autoRebuildTimer = undefined;
@@ -1528,17 +1790,19 @@ function initializeVisualizerControls() {
     cleanupScene();
     cleanupScene = await createScene(holeModels);
     renderLegend(holeModels);
-    const message = source === 'auto'
-      ? `Auto-rebuilt from ${holeModels.length} hole model(s).`
-      : `Visualizer rebuilt from ${holeModels.length} hole model(s).`;
+    const message =
+      source === "auto"
+        ? `Auto-rebuilt from ${holeModels.length} hole model(s).`
+        : `Visualizer rebuilt from ${holeModels.length} hole model(s).`;
     setSuccess(message);
     return true;
   };
 
   const scheduleAutoRebuild = () => {
     if (!autoRebuildToggle.checked) {
-      status.textContent = 'Auto-rebuild is off. Press Rebuild visualizer to apply changes.';
-      status.dataset.state = 'idle';
+      status.textContent =
+        "Auto-rebuild is off. Press Rebuild visualizer to apply changes.";
+      status.dataset.state = "idle";
       return;
     }
 
@@ -1546,18 +1810,18 @@ function initializeVisualizerControls() {
       window.clearTimeout(autoRebuildTimer);
     }
 
-    status.textContent = 'Changes detected. Rebuilding shortly...';
-    status.dataset.state = 'pending';
+    status.textContent = "Changes detected. Rebuilding shortly...";
+    status.dataset.state = "pending";
 
     autoRebuildTimer = window.setTimeout(() => {
-      rebuild('auto');
+      rebuild("auto");
     }, autoRebuildDelayMs);
   };
 
   const onEditorKeydown = (event: KeyboardEvent) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
       event.preventDefault();
-      rebuild('manual');
+      rebuild("manual");
     }
   };
 
@@ -1566,57 +1830,76 @@ function initializeVisualizerControls() {
   };
 
   const onGlobalShortcut = (event: KeyboardEvent) => {
-    if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isTypingTarget(event.target)) {
+    if (
+      !event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      isTypingTarget(event.target)
+    ) {
       return;
     }
 
     const key = event.key.toLowerCase();
 
-    if (key === 't') {
+    if (key === "t") {
       event.preventDefault();
-      setTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
+      setTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
       return;
     }
 
-    if (key === 'd') {
+    if (key === "d") {
       event.preventDefault();
       toggleDataButton.click();
       return;
     }
 
-    if (key === 'l') {
+    if (key === "l") {
       event.preventDefault();
       toggleLegendButton.click();
     }
   };
 
-  rebuildButton.addEventListener('click', () => {
-    rebuild('manual');
+  rebuildButton.addEventListener("click", () => {
+    rebuild("manual");
   });
-  toggleDataButton.addEventListener('click', () => {
+  toggleDataButton.addEventListener("click", () => {
     isTrajectoryDataOpen = !isTrajectoryDataOpen;
-    setCollapsibleState(trajectoryDataSection, toggleDataButton, isTrajectoryDataOpen, 'Hide trajectory data', 'Show trajectory data');
+    setCollapsibleState(
+      trajectoryDataSection,
+      toggleDataButton,
+      isTrajectoryDataOpen,
+      "Hide trajectory data",
+      "Show trajectory data",
+    );
   });
-  toggleLegendButton.addEventListener('click', () => {
+  toggleLegendButton.addEventListener("click", () => {
     isLegendOpen = !isLegendOpen;
-    setCollapsibleState(legendSection, toggleLegendButton, isLegendOpen, 'Hide labels', 'Show labels');
+    setCollapsibleState(
+      legendSection,
+      toggleLegendButton,
+      isLegendOpen,
+      "Hide labels",
+      "Show labels",
+    );
   });
-  resetButton.addEventListener('click', () => {
+  resetButton.addEventListener("click", () => {
     collarInput.value = DEFAULT_INPUTS.collarCsv;
     surveyInput.value = DEFAULT_INPUTS.surveyCsv;
     assayInput.value = DEFAULT_INPUTS.assayCsv;
 
     if (autoRebuildToggle.checked) {
-      rebuild('manual');
-      status.textContent = 'Defaults restored and visualizer rebuilt.';
-      status.dataset.state = 'success';
+      rebuild("manual");
+      status.textContent = "Defaults restored and visualizer rebuilt.";
+      status.dataset.state = "success";
     } else {
       clearErrors();
-      status.textContent = 'Defaults restored. Press Rebuild visualizer to apply changes.';
-      status.dataset.state = 'idle';
+      status.textContent =
+        "Defaults restored. Press Rebuild visualizer to apply changes.";
+      status.dataset.state = "idle";
     }
   });
-  autoRebuildToggle.addEventListener('change', () => {
+  autoRebuildToggle.addEventListener("change", () => {
     if (autoRebuildToggle.checked) {
       scheduleAutoRebuild();
     } else {
@@ -1624,32 +1907,36 @@ function initializeVisualizerControls() {
         window.clearTimeout(autoRebuildTimer);
         autoRebuildTimer = undefined;
       }
-      status.textContent = 'Auto-rebuild is off. Press Rebuild visualizer to apply changes.';
-      status.dataset.state = 'idle';
+      status.textContent =
+        "Auto-rebuild is off. Press Rebuild visualizer to apply changes.";
+      status.dataset.state = "idle";
     }
   });
-  collarInput.addEventListener('keydown', onEditorKeydown);
-  surveyInput.addEventListener('keydown', onEditorKeydown);
-  assayInput.addEventListener('keydown', onEditorKeydown);
-  collarInput.addEventListener('input', onEditorInput);
-  surveyInput.addEventListener('input', onEditorInput);
-  assayInput.addEventListener('input', onEditorInput);
+  collarInput.addEventListener("keydown", onEditorKeydown);
+  surveyInput.addEventListener("keydown", onEditorKeydown);
+  assayInput.addEventListener("keydown", onEditorKeydown);
+  collarInput.addEventListener("input", onEditorInput);
+  surveyInput.addEventListener("input", onEditorInput);
+  assayInput.addEventListener("input", onEditorInput);
 
   cleanupVisualizerShortcuts?.();
-  document.addEventListener('keydown', onGlobalShortcut);
+  document.addEventListener("keydown", onGlobalShortcut);
   cleanupVisualizerShortcuts = () => {
-    document.removeEventListener('keydown', onGlobalShortcut);
+    document.removeEventListener("keydown", onGlobalShortcut);
   };
 }
 
 function renderLegend(models: HoleModel[]) {
-  const legendContainer = document.querySelector<HTMLDivElement>('#legend-items');
+  const legendContainer =
+    document.querySelector<HTMLDivElement>("#legend-items");
 
   if (!legendContainer) {
     return;
   }
 
-  legendContainer.innerHTML = buildLithologyLegend(models).map(renderLegendItem).join('');
+  legendContainer.innerHTML = buildLithologyLegend(models)
+    .map(renderLegendItem)
+    .join("");
 }
 
 // Helper functions for UI logic and CSV validation
@@ -1660,13 +1947,17 @@ function isReducedMotionPreferred() {
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!target) return false;
   if (target instanceof HTMLTextAreaElement) return true;
-  if (target instanceof HTMLInputElement && target.type === 'text') return true;
-  if ((target as HTMLElement).getAttribute?.('contenteditable') === 'true') return true;
+  if (target instanceof HTMLInputElement && target.type === "text") return true;
+  if ((target as HTMLElement).getAttribute?.("contenteditable") === "true")
+    return true;
   return false;
 }
 
 function buildLithologyLegend(models: HoleModel[]) {
-  const map = new Map<string, { lithology: string; color: string; maxCu: number; intervalCount: number }>();
+  const map = new Map<
+    string,
+    { lithology: string; color: string; maxCu: number; intervalCount: number }
+  >();
 
   for (const model of models) {
     for (const assay of model.assays) {
@@ -1679,7 +1970,7 @@ function buildLithologyLegend(models: HoleModel[]) {
           lithology: assay.lithology,
           color: assay.color_hex,
           maxCu: assay.cu_pct,
-          intervalCount: 1
+          intervalCount: 1,
         });
       }
     }
@@ -1689,15 +1980,15 @@ function buildLithologyLegend(models: HoleModel[]) {
 }
 
 function parseCSV(csv: string) {
-  const lines = csv.trim().split('\n');
-  const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+  const lines = csv.trim().split("\n");
+  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
 
   return lines.slice(1).map((line) => {
-    const values = line.split(',').map((v) => v.trim());
+    const values = line.split(",").map((v) => v.trim());
     const obj: Record<string, string> = {};
 
     headers.forEach((header, index) => {
-      obj[header] = values[index] || '';
+      obj[header] = values[index] || "";
     });
 
     return obj;
@@ -1712,37 +2003,37 @@ function parseNumber(value: string): number {
 
 function parseCollars(csv: string): CollarRow[] {
   return parseCSV(csv).map((row) => ({
-    hole_id: row.hole_id || '',
+    hole_id: row.hole_id || "",
     x: parseNumber(row.x),
     y: parseNumber(row.y),
     z: parseNumber(row.z),
-    total_depth: parseNumber(row.total_depth)
+    total_depth: parseNumber(row.total_depth),
   }));
 }
 
 function parseSurveyRows(csv: string): SurveyRow[] {
   return parseCSV(csv).map((row) => ({
-    hole_id: row.hole_id || '',
+    hole_id: row.hole_id || "",
     depth: parseNumber(row.depth),
     azimuth: parseNumber(row.azimuth),
-    dip: parseNumber(row.dip)
+    dip: parseNumber(row.dip),
   }));
 }
 
 function parseAssayRows(csv: string): AssayRow[] {
   return parseCSV(csv).map((row) => ({
-    hole_id: row.hole_id || '',
+    hole_id: row.hole_id || "",
     from_depth: parseNumber(row.from_depth),
     to_depth: parseNumber(row.to_depth),
-    lithology: row.lithology || '',
+    lithology: row.lithology || "",
     cu_pct: parseNumber(row.cu_pct),
-    color_hex: row.color_hex || ''
+    color_hex: row.color_hex || "",
   }));
 }
 
 function escapeHtml(value: string) {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }

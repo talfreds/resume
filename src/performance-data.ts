@@ -8,7 +8,7 @@ export interface PerformanceMetrics {
   lighthouse: {
     performance: number;
     accessibility: number;
-    'best-practices': number;
+    "best-practices": number;
     seo: number;
   };
   coreWebVitals: {
@@ -41,16 +41,21 @@ export async function loadPerformanceData(): Promise<PerformanceData | null> {
       optimized,
       improvements: {
         bundleReduction: (
-          ((1 - optimized.bundleSize.gzipped / baseline.bundleSize.gzipped) * 100).toFixed(1)
-        ),
-        performanceGain: optimized.lighthouse.performance - baseline.lighthouse.performance,
+          (1 - optimized.bundleSize.gzipped / baseline.bundleSize.gzipped) *
+          100
+        ).toFixed(1),
+        performanceGain:
+          optimized.lighthouse.performance - baseline.lighthouse.performance,
         lcpImprovement: (
-          ((1 - optimized.coreWebVitals.lcp.value / baseline.coreWebVitals.lcp.value) * 100).toFixed(1)
-        ),
+          (1 -
+            optimized.coreWebVitals.lcp.value /
+              baseline.coreWebVitals.lcp.value) *
+          100
+        ).toFixed(1),
       },
     };
   } catch (error) {
-    console.error('Failed to load performance data:', error);
+    console.error("Failed to load performance data:", error);
     return null;
   }
 }

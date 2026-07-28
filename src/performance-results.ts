@@ -1,4 +1,4 @@
-import type { PerformanceData } from './performance-data';
+import type { PerformanceData } from "./performance-data";
 
 export function renderLighthouseResults(data: PerformanceData | null) {
   if (!data) {
@@ -42,28 +42,28 @@ export function renderLighthouseResults(data: PerformanceData | null) {
               <div class="score-number">${optimized.lighthouse.performance}</div>
               <div class="score-label">Performance</div>
               <div class="score-delta" data-improvement="${optimized.lighthouse.performance >= baseline.lighthouse.performance}">
-                ${optimized.lighthouse.performance >= baseline.lighthouse.performance ? '+' : ''}${optimized.lighthouse.performance - baseline.lighthouse.performance}
+                ${optimized.lighthouse.performance >= baseline.lighthouse.performance ? "+" : ""}${optimized.lighthouse.performance - baseline.lighthouse.performance}
               </div>
             </div>
             <div class="score-card accessibility">
               <div class="score-number">${optimized.lighthouse.accessibility}</div>
               <div class="score-label">Accessibility</div>
               <div class="score-delta" data-improvement="${optimized.lighthouse.accessibility >= baseline.lighthouse.accessibility}">
-                ${optimized.lighthouse.accessibility >= baseline.lighthouse.accessibility ? '+' : ''}${optimized.lighthouse.accessibility - baseline.lighthouse.accessibility}
+                ${optimized.lighthouse.accessibility >= baseline.lighthouse.accessibility ? "+" : ""}${optimized.lighthouse.accessibility - baseline.lighthouse.accessibility}
               </div>
             </div>
             <div class="score-card best-practices">
-              <div class="score-number">${optimized.lighthouse['best-practices']}</div>
+              <div class="score-number">${optimized.lighthouse["best-practices"]}</div>
               <div class="score-label">Best Practices</div>
-              <div class="score-delta" data-improvement="${optimized.lighthouse['best-practices'] >= baseline.lighthouse['best-practices']}">
-                ${optimized.lighthouse['best-practices'] >= baseline.lighthouse['best-practices'] ? '+' : ''}${optimized.lighthouse['best-practices'] - baseline.lighthouse['best-practices']}
+              <div class="score-delta" data-improvement="${optimized.lighthouse["best-practices"] >= baseline.lighthouse["best-practices"]}">
+                ${optimized.lighthouse["best-practices"] >= baseline.lighthouse["best-practices"] ? "+" : ""}${optimized.lighthouse["best-practices"] - baseline.lighthouse["best-practices"]}
               </div>
             </div>
             <div class="score-card seo">
               <div class="score-number">${optimized.lighthouse.seo}</div>
               <div class="score-label">SEO</div>
               <div class="score-delta" data-improvement="${optimized.lighthouse.seo >= baseline.lighthouse.seo}">
-                ${optimized.lighthouse.seo >= baseline.lighthouse.seo ? '+' : ''}${optimized.lighthouse.seo - baseline.lighthouse.seo}
+                ${optimized.lighthouse.seo >= baseline.lighthouse.seo ? "+" : ""}${optimized.lighthouse.seo - baseline.lighthouse.seo}
               </div>
             </div>
           </div>
@@ -76,7 +76,7 @@ export function renderLighthouseResults(data: PerformanceData | null) {
               <div class="vital-header">
                 <span class="vital-label">Largest Contentful Paint (LCP)</span>
                 <span class="vital-rating" data-rating="${optimized.coreWebVitals.lcp.rating}">
-                  ✓ ${optimized.coreWebVitals.lcp.rating === 'good' ? 'Good' : 'Needs Improvement'}
+                  ✓ ${optimized.coreWebVitals.lcp.rating === "good" ? "Good" : "Needs Improvement"}
                 </span>
               </div>
               <div class="vital-values">
@@ -89,7 +89,7 @@ export function renderLighthouseResults(data: PerformanceData | null) {
               <div class="vital-header">
                 <span class="vital-label">First Input Delay (FID)</span>
                 <span class="vital-rating" data-rating="${optimized.coreWebVitals.fid.rating}">
-                  ✓ ${optimized.coreWebVitals.fid.rating === 'good' ? 'Good' : 'Needs Improvement'}
+                  ✓ ${optimized.coreWebVitals.fid.rating === "good" ? "Good" : "Needs Improvement"}
                 </span>
               </div>
               <div class="vital-values">
@@ -101,7 +101,7 @@ export function renderLighthouseResults(data: PerformanceData | null) {
               <div class="vital-header">
                 <span class="vital-label">Cumulative Layout Shift (CLS)</span>
                 <span class="vital-rating" data-rating="${optimized.coreWebVitals.cls.rating}">
-                  ✓ ${optimized.coreWebVitals.cls.rating === 'good' ? 'Good' : 'Needs Improvement'}
+                  ✓ ${optimized.coreWebVitals.cls.rating === "good" ? "Good" : "Needs Improvement"}
                 </span>
               </div>
               <div class="vital-values">
