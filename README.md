@@ -16,14 +16,15 @@ A TypeScript resume portfolio site built with Vite. The app includes:
 ## Local Development
 
 ```bash
-npm install
-npm run dev
+corepack enable
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
 ## Build
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ## App Routes
