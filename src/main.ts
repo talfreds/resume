@@ -1,5 +1,9 @@
 import "./styles.css";
-import { createScene, loadAndBuildHoleModels } from "./visualizer-loader";
+import {
+  createScene,
+  getVisualizerThemeApplier,
+  loadAndBuildHoleModels,
+} from "./visualizer-loader";
 import { loadPerformanceData } from "./performance-data";
 import { renderLighthouseResults } from "./performance-results";
 import type {
@@ -468,6 +472,7 @@ async function renderCurrentRoute() {
 
   if (route === "resume") {
     cleanupScene = await createScene(holeModels);
+    applyVisualizerTheme = getVisualizerThemeApplier();
     initializeVisualizerControls();
   }
 
@@ -1789,6 +1794,7 @@ function initializeVisualizerControls() {
     holeModels = await loadAndBuildHoleModels(visualizerInputs);
     cleanupScene();
     cleanupScene = await createScene(holeModels);
+    applyVisualizerTheme = getVisualizerThemeApplier();
     renderLegend(holeModels);
     const message =
       source === "auto"

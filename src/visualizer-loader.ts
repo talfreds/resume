@@ -26,3 +26,11 @@ export async function createScene(models: HoleModel[]) {
   const module = await ensureVisualizerLoaded();
   return module.createDrillholeScene(models);
 }
+
+export function getVisualizerThemeApplier() {
+  if (!visualizerModule) {
+    return () => {};
+  }
+
+  return visualizerModule.getApplyVisualizerTheme();
+}
